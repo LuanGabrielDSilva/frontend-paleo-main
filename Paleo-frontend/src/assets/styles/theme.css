@@ -1,0 +1,28 @@
+:root {
+  /* BASE */
+  --bg-primary: #14100b;
+  --bg-secondary: #1a130c;
+  --bg-card: #1f1710;
+
+  /* DOURADOS */
+  --gold-primary: #d4af37;
+  --gold-light: #f1d98a;
+  --gold-dark: #b8860b;
+
+  /* TEXTOS */
+  --text-primary: #f1d98a;
+  --text-secondary: #c8b388;
+  --text-muted: #8a7551;
+
+  /* STATUS */
+  --danger: #a83232;
+  --info: #6db7d4;
+  --success: #7abf6d;
+
+  /* BORDAS */
+  --border-primary: rgba(212,175,55,.2);
+  --border-strong: rgba(212,175,55,.4);
+
+  /* SHADOW */
+  --shadow-gold: rgba(212,175,55,.3);
+}

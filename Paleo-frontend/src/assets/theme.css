@@ -1,0 +1,14 @@
+:root {
+  --bg: hsl(30, 20%, 5%);
+  --fg: hsl(36, 50%, 88%);
+  --card-bg: hsl(30, 18%, 8%);
+  --muted: hsl(36, 20%, 55%);
+  --border-clr: hsl(36, 25%, 18%);
+  --gold: hsl(36, 60%, 50%);
+}
+
+/* fundo global real */
+body {
+  background: var(--bg);
+  color: var(--fg);
+}

@@ -1,0 +1,164 @@
+/* ══════════════════════════════════════
+   RESET GLOBAL (SEM FUNDO BRANCO 🚫)
+   ══════════════════════════════════════ */
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background: #1a1208; /* 🔥 fundo padrão do projeto */
+}
+
+#app {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
+/* ══════════════════════════════════════
+   VARIÁVEIS GLOBAIS (SEM FORÇAR FUNDO)
+   ══════════════════════════════════════ */
+:root {
+  --bg: hsl(30, 20%, 5%);
+  --fg: hsl(36, 50%, 88%);
+  --card-bg: hsl(30, 18%, 8%);
+  --muted: hsl(36, 20%, 55%);
+  --border: hsl(36, 25%, 18%);
+  --accent: hsl(36, 60%, 50%);
+  --accent-light: hsl(40, 70%, 70%);
+  --accent-dark: hsl(32, 50%, 30%);
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color-scheme: dark;
+  color: var(--fg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    font-size: 16px;
+  }
+}
+
+/* ══════════════════════════════════════
+   TIPOGRAFIA
+   ══════════════════════════════════════ */
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+h1, h2, h3 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+h1 {
+  font-size: 56px;
+  letter-spacing: -1.5px;
+  margin: 32px 0;
+}
+
+h2 {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* ══════════════════════════════════════
+   CÓDIGO / ELEMENTOS
+   ══════════════════════════════════════ */
+code {
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #1f2028;
+}
+
+/* ══════════════════════════════════════
+   LAYOUT BASE (REUTILIZÁVEL)
+   ══════════════════════════════════════ */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  padding: 20px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* ══════════════════════════════════════
+   GRID PADRÃO
+   ══════════════════════════════════════ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+/* ══════════════════════════════════════
+   CARD PADRÃO (usado em eras e animais)
+   ══════════════════════════════════════ */
+.card {
+  background: var(--card-bg);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+/* ══════════════════════════════════════
+   IMAGENS
+   ══════════════════════════════════════ */
+.img,
+.image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+/* ══════════════════════════════════════
+   BOTÕES (base)
+   ══════════════════════════════════════ */
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVO
+   ══════════════════════════════════════ */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 32px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
