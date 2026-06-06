@@ -15,12 +15,6 @@ const user = computed(() => {
 const inicial = computed(() => user.value.name?.[0]?.toUpperCase() || 'U')
 const firstName = computed(() => user.value.name?.split(' ')[0] || 'Usuário')
 
-const visibleMissions = computed(() => {
-  return missions.value
-    .filter((mission) => !mission.completed)
-    .slice(0, 3);
-});
-
 function toggle() {
   open.value = !open.value
 }

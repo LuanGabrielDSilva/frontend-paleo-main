@@ -226,6 +226,29 @@ const routes = [
     ],
   },
 
+  /*
+  ======================================
+    ROTAS DOS 4 FICTICIOS
+  ======================================
+  */
+
+  {
+  path: '/ficcao/indominus-rex',
+  component: () => import('@/views/fiction/IndominusRex.vue')
+},
+{
+  path: '/ficcao/indoraptor',
+  component: () => import('@/views/fiction/Indoraptor.vue')
+},
+{
+  path: '/ficcao/scorpios-rex',
+  component: () => import('@/views/fiction/ScorpiosRex.vue')
+},
+{
+  path: '/ficcao/distortus-rex',
+  component: () => import('@/views/fiction/DistortusRex.vue')
+},
+
 
 
   /*
@@ -301,8 +324,25 @@ export const router = createRouter({
   Lista de rotas
   */
   routes,
-});
 
+  /*
+  =====================================================
+  COMPORTAMENTO DE SCROLL
+  =====================================================
+  Sempre que trocar de rota → volta para o TOPO.
+  Se o usuário usar voltar/avançar do navegador →
+  restaura a posição anterior.
+  */
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    }
+    if (to.hash) {
+      return { el: to.hash, behavior: "smooth" };
+    }
+    return { top: 0, left: 0 };
+  },
+});
 
 
 /*
@@ -320,13 +360,14 @@ Usado para:
 
 router.beforeEach((to) => {
   const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const publicPages = [
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/reset-password",
-];
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ];
 
   const isPublic = publicPages.includes(to.path);
 
@@ -335,8 +376,13 @@ router.beforeEach((to) => {
     return "/login";
   }
 
-  // logado tentando acessar login
+  // logado tentando ir pro login
   if (token && to.path === "/login") {
+    return "/home";
+  }
+
+  // 🔥 PROTEÇÃO ADMIN
+  if (to.path.startsWith("/admin") && user.role !== "admin") {
     return "/home";
   }
 

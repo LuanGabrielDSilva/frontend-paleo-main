@@ -266,10 +266,11 @@
   </header>
 
   <div class="movies-grid">
-    <article
+    <router-link
       v-for="(movie, i) in movieCreatures"
       :key="movie.name"
-      class="movie-card"
+      :to="`/ficcao/${movie.slug}`"
+      class="movie-card movie-link"
       :style="{ animationDelay: 0.08 * i + 's' }"
     >
       <img :src="movie.image" :alt="movie.name" class="movie-image" />
@@ -285,7 +286,7 @@
           {{ movie.desc }}
         </p>
       </div>
-    </article>
+    </router-link>
   </div>
 </section>
 
@@ -328,29 +329,33 @@ import fossilChartImg from '@/assets/HomeImagem/GraficoFossil.jpg'
 
 import indominusImg from '@/assets/Movies/indominus.jpg'
 import indoraptorImg from '@/assets/Movies/indoraptor.jpg'
-import scorpiusImg from '@/assets/Movies/scorpius.jpg'
+import scorpiusImg from '@/assets/Movies/scorpios.jpg'
 import distortusImg from '@/assets/Movies/distortus.jpg'
 
 const movieCreatures = [
   {
+    slug: 'indominus-rex',
     name: 'Indominus Rex',
     origin: 'Jurassic World (2015)',
     image: indominusImg,
     desc: 'Híbrido genético criado pela InGen combinando DNA de diversos predadores pré-históricos.'
   },
   {
+    slug: 'indoraptor',
     name: 'Indoraptor',
     origin: 'Jurassic World: Fallen Kingdom',
     image: indoraptorImg,
     desc: 'Versão militarizada da Indominus Rex, projetada para operações táticas.'
   },
   {
+    slug: 'scorpios-rex',
     name: 'Scorpios Rex',
     origin: 'Camp Cretaceous',
     image: scorpiusImg,
     desc: 'Protótipo instável de híbrido genético com comportamento extremamente agressivo.'
   },
   {
+    slug: 'distortus-rex',
     name: 'Distortus Rex',
     origin: 'Jurassic World Rebirth',
     image: distortusImg,
@@ -1097,6 +1102,12 @@ const facts = [
 .movie-desc {
   color: var(--fg-dim);
   line-height: 1.6;
+}
+
+.movie-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
 </style>

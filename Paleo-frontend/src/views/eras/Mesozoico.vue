@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import api from "../../services/api";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+function goBack() {
+  router.back();
+}
 
 const periodos = ref<any[]>([]);
 const activeIndex = ref<number | null>(null);
@@ -43,6 +50,26 @@ const carouselImages = ref([
     caption: "Fósseis e o registro da vida antiga",
     tag: "Triássico",
   },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Brachiosaurus_DB.jpg/1200px-Brachiosaurus_DB.jpg",
+    caption: "Brachiosaurus — pescoços que tocavam o céu",
+    tag: "Jurássico",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Quetzalcoatlus_BW.jpg/1200px-Quetzalcoatlus_BW.jpg",
+    caption: "Quetzalcoatlus — pterossauro do tamanho de um avião",
+    tag: "Cretáceo",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Archaeopteryx_lithographica.jpg/1200px-Archaeopteryx_lithographica.jpg",
+    caption: "Archaeopteryx — o elo entre dinossauros e aves",
+    tag: "Jurássico",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Mosasaurus_BW.jpg/1200px-Mosasaurus_BW.jpg",
+    caption: "Mosasaurus — o leviatã dos mares cretáceos",
+    tag: "Cretáceo",
+  }
 ]);
 
 const carouselIndex = ref(0);
@@ -105,6 +132,23 @@ function toggle(i: number) {
     <div class="grain"></div>
     <div class="vignette"></div>
 
+    <div class="back-container">
+      <button class="back-btn" @click="goBack" aria-label="Voltar">
+        <span class="back-btn-bg"></span>
+        <span class="back-btn-border"></span>
+        <span class="back-btn-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M15 6l-6 6 6 6"/>
+          </svg>
+        </span>
+        <span class="back-btn-text">
+          <small>RETORNAR</small>
+          <strong>às Eras Geológicas</strong>
+        </span>
+        <span class="back-btn-glow"></span>
+      </button>
+    </div>
+
     <!-- HERO -->
     <div class="hero">
       <img src="@/assets/mesozoico.png" alt="Era Mesozoica" class="hero-img" />
@@ -165,6 +209,15 @@ function toggle(i: number) {
           <p>
             A era terminou dramaticamente há 66 milhões de anos com o impacto de um asteroide que causou
             uma das maiores extinções em massa da história da Terra.
+          </p>
+          <p>
+            Foi no Mesozoico que a Pangeia se fragmentou, abrindo o Atlântico e desenhando a geografia
+            que reconhecemos hoje. Junto com os continentes, evoluíram florestas de coníferas, cicadáceas
+            e — pela primeira vez — as plantas com flores.
+          </p>
+          <p>
+            Nos mares, ictiossauros e plesiossauros caçavam amonites; nos céus, pterossauros do tamanho
+            de aviões planavam sobre paisagens dominadas por gigantes de escamas e penas.
           </p>
         </div>
 
@@ -238,45 +291,48 @@ function toggle(i: number) {
 
       <!-- CARDS -->
       <div class="cards">
-        <article class="card" data-index="01">
-          <div class="card-num">01</div>
+        <article class="card" data-index="04">
+          <div class="card-num">04</div>
           <div class="card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-              <path d="M3 18c2-4 5-6 9-6s7 2 9 6"/>
-              <path d="M8 12V6c0-1 1-2 2-2s2 1 2 2v6"/>
+              <path d="M3 12c2-5 7-8 9-8s7 3 9 8"/>
+              <path d="M3 12c2 5 7 8 9 8s7-3 9-8"/>
+              <circle cx="9" cy="11" r="0.8" fill="currentColor"/>
             </svg>
           </div>
-          <h3>Triássico</h3>
-          <p>Surgimento dos primeiros dinossauros em um supercontinente ainda em recuperação.</p>
+          <h3>Senhores dos Mares</h3>
+          <p>Ictiossauros, plesiossauros e mosassauros transformaram os oceanos mesozoicos em arenas de gigantes.</p>
           <span class="card-glow"></span>
         </article>
 
-        <article class="card" data-index="02">
-          <div class="card-num">02</div>
+        <article class="card" data-index="05">
+          <div class="card-num">05</div>
           <div class="card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-              <path d="M2 18c3-2 5-2 7 0s4 2 7 0 4-2 6 0"/>
-              <path d="M5 14c2-6 5-9 8-9s6 3 8 9"/>
+              <path d="M3 18c4-6 8-9 9-9s5 3 9 9"/>
+              <path d="M9 9l-2-2"/>
+              <path d="M15 9l2-2"/>
             </svg>
           </div>
-          <h3>Jurássico</h3>
-          <p>Apogeu dos dinossauros gigantes. Florestas densas e ecossistemas diversificados.</p>
+          <h3>Senhores dos Céus</h3>
+          <p>Pterossauros foram os primeiros vertebrados a conquistar o voo ativo — alguns rivalizando com aviões modernos.</p>
           <span class="card-glow"></span>
         </article>
 
-        <article class="card" data-index="03">
-          <div class="card-num">03</div>
+        <article class="card" data-index="06">
+          <div class="card-num">06</div>
           <div class="card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-              <circle cx="18" cy="6" r="2.5"/>
-              <path d="M16 8l-9 9"/>
-              <path d="M5 21l2-6 4 1z"/>
+              <path d="M12 3v8"/>
+              <path d="M8 7l4 4 4-4"/>
+              <path d="M5 20c2-3 5-4 7-4s5 1 7 4"/>
             </svg>
           </div>
-          <h3>Cretáceo</h3>
-          <p>Último ato dos dinossauros. Surgimento das plantas com flores e das primeiras aves modernas.</p>
+          <h3>Nascem as Flores</h3>
+          <p>No meio do Cretáceo surgem as angiospermas — flores e frutos coevoluem com insetos polinizadores.</p>
           <span class="card-glow"></span>
         </article>
+
       </div>
 
       <!-- Loading / Error -->
@@ -973,5 +1029,138 @@ function toggle(i: number) {
   .meta-divider { display: none; }
   .timeline { grid-template-columns: 1fr; }
   .era-detail { padding: 28px 20px; }
+}
+/* === BOTÃO VOLTAR — ouro/Cinzel === */
+.back-container {
+  position: fixed;
+  top: 28px;
+  left: 28px;
+  z-index: 9999;
+  animation: rise 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  top: 100px;
+}
+
+.back-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 22px 12px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #f5e6c8;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.04em;
+  overflow: visible;
+  isolation: isolate;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.back-btn-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(255, 245, 214, 0.06), rgba(10, 6, 4, 0.75));
+  backdrop-filter: blur(12px);
+  border-radius: 2px;
+  z-index: -2;
+  transition: background 0.5s ease;
+}
+.back-btn-border {
+  position: absolute; inset: 0;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 2px;
+  z-index: -1;
+  transition: border-color 0.5s ease, box-shadow 0.5s ease;
+}
+.back-btn-border::before,
+.back-btn-border::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 10px;
+  border: 1px solid #d4af37;
+  transition: width 0.5s ease, height 0.5s ease;
+}
+.back-btn-border::before {
+  top: -1px; left: -1px;
+  border-right: none; border-bottom: none;
+}
+.back-btn-border::after {
+  bottom: -1px; right: -1px;
+  border-left: none; border-top: none;
+}
+.back-btn-arrow {
+  display: grid; place-items: center;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  color: #d4af37;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+              background 0.5s ease, color 0.4s ease, border-color 0.4s ease;
+}
+.back-btn-arrow svg { width: 14px; height: 14px; }
+.back-btn-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+.back-btn-text small {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.32em;
+  color: #d4af37;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.back-btn-text strong {
+  font-weight: 500;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #f1d98a;
+  font-family: 'Cormorant Garamond', serif;
+}
+.back-btn-glow {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.35), transparent 65%);
+  filter: blur(18px);
+  opacity: 0;
+  z-index: -3;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+.back-btn:hover {
+  transform: translateX(-4px);
+}
+.back-btn:hover .back-btn-bg {
+  background: linear-gradient(160deg, rgba(212, 175, 55, 0.12), rgba(10, 6, 4, 0.85));
+}
+.back-btn:hover .back-btn-border {
+  border-color: rgba(241, 217, 138, 0.9);
+  box-shadow: 0 0 24px -4px rgba(212, 175, 55, 0.45),
+              inset 0 0 18px -8px rgba(212, 175, 55, 0.4);
+}
+.back-btn:hover .back-btn-border::before,
+.back-btn:hover .back-btn-border::after {
+  width: 16px; height: 16px;
+}
+.back-btn:hover .back-btn-arrow {
+  transform: translateX(-3px);
+  background: rgba(212, 175, 55, 0.18);
+  border-color: #f1d98a;
+  color: #fff5d6;
+}
+.back-btn:hover .back-btn-glow { opacity: 1; }
+.back-btn:active { transform: translateX(-2px) scale(0.98); }
+.back-btn:focus-visible {
+  outline: none;
+}
+.back-btn:focus-visible .back-btn-border {
+  border-color: #f1d98a;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.25), 0 0 24px -4px rgba(212, 175, 55, 0.55);
+}
+@media (max-width: 720px) {
+  .back-container { top: 16px; left: 16px; }
+  .back-btn-text small { font-size: 0.55rem; }
+  .back-btn-text strong { font-size: 0.85rem; }
 }
 </style>

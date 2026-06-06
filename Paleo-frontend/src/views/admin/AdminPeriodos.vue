@@ -9,6 +9,7 @@ const periodos = ref<any[]>([]);
 const eras = ref<any[]>([]);
 const selected = ref<any | null>(null);
 const selectedEra = ref<string>("");
+const variantImagesInput = ref("");
 
 /* CONFIRMAÇÃO DE EXCLUSÃO */
 const deleteModal = ref({
@@ -94,9 +95,21 @@ const grouped = computed(() => {
 });
 
 async function create() {
+  newPeriodo.value.image = variantImagesInput.value.split(",")[0]?.trim() || "";
+
   await api.post("/periodos", newPeriodo.value);
-  newPeriodo.value = { name: "", description: "", image: "", eraId: "", periodoId: "" };
+
+  newPeriodo.value = {
+    name: "",
+    description: "",
+    image: "",
+    eraId: "",
+    periodoId: ""
+  };
+
+  variantImagesInput.value = "";
   selectedEra.value = "";
+
   await load();
 }
 

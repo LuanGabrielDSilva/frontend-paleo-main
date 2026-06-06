@@ -28,7 +28,13 @@ const periodsPerPage = 1;
 ========================= */
 const favorites = ref<string[]>([]);
 
-const FAVORITES_KEY = "paleo-favorites";
+const user = JSON.parse(
+  localStorage.getItem("user") || "{}"
+);
+
+const FAVORITES_KEY = user?.id
+  ? `paleo-favorites-${user.id}`
+  : "paleo-favorites-guest";
 
 /* carregar favoritos */
 const loadFavorites = () => {

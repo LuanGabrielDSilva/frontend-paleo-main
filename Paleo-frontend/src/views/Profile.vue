@@ -34,12 +34,20 @@ const loadUser = async () => {
       api.get('/orders')
     ])
 
+      console.log("PEDIDOS:", ordersRes.data);
+      
     user.value = userRes.data
     localStorage.setItem('user', JSON.stringify(userRes.data))
 
-    const savedFavorites = JSON.parse(
-      localStorage.getItem('paleo-favorites') || '[]'
-    )
+    const currentUser = JSON.parse(
+        localStorage.getItem("user") || "{}"
+      );
+
+      const savedFavorites = JSON.parse(
+        localStorage.getItem(
+          `paleo-favorites-${currentUser.id}`
+        ) || "[]"
+      );
 
     favoriteAnimals.value = animalsRes.data.filter((animal) =>
       savedFavorites.includes(String(animal.id))

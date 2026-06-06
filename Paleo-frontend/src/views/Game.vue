@@ -48,7 +48,7 @@ onMounted(() => {
         <span class="eyebrow-line"></span>
 
         <span class="eyebrow-text">
-          Era Mesozoica · Est. 66M a.C.
+          🦴
         </span>
 
         <span class="eyebrow-line"></span>

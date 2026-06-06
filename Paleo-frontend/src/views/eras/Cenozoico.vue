@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import api from "../../services/api";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+function goBack() {
+  router.back();
+}
 
 const periodos = ref<any[]>([]);
 const activeIndex = ref<number | null>(null);
@@ -31,15 +38,35 @@ const carouselImages = ref([
     tag: "Paleógeno",
   },
   {
-    url: "https://images.openai.com/static-rsc-4/kMuYCxJ1rY9It7gIxGWb0Mfp97i53kFcw02fDNaC16D1bNaoMRIuDJwcRjY550mocyQCEdef6t3rOwXPTOpIINEofGvgiU8ducuL0RsPj8mxUo2rnRxuvkp7vO6r-8K_82EMTZZSHSP5Xt3tGUHADUzZ8HcuJpfnlBrbyCaHdh-gNvPsOIuwtft5gc6nFpNd?purpose=fullsize",
-    caption: "Fósseis revelam a história da vida",
-    tag: "Cenozoico",
-  },
-  {
     url: "https://blog.ofitexto.com.br/wp-content/uploads/2026/02/Holoceno-1-1024x683.webp",
     caption: "Paisagens modernas começam a surgir",
     tag: "Holoceno",
   },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Woolly_mammoth.jpg/1200px-Woolly_mammoth.jpg",
+    caption: "Mammuthus — colosso peludo das estepes glaciais",
+    tag: "Pleistoceno",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Smilodon_fatalis.jpg/1200px-Smilodon_fatalis.jpg",
+    caption: "Smilodon — o tigre-dentes-de-sabre",
+    tag: "Pleistoceno",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Megatherium_americanum.jpg/1200px-Megatherium_americanum.jpg",
+    caption: "Megatherium — preguiças do tamanho de elefantes",
+    tag: "Pleistoceno",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Indricotherium11.jpg/1200px-Indricotherium11.jpg",
+    caption: "Indricotherium — o maior mamífero terrestre da história",
+    tag: "Paleógeno",
+  },
+  {
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Australopithecus_afarensis.jpg/1200px-Australopithecus_afarensis.jpg",
+    caption: "Australopithecus — primeiros passos bípedes",
+    tag: "Neógeno",
+  }
 ]);
 const carouselIndex = ref(0);
 const carouselPaused = ref(false);
@@ -110,6 +137,23 @@ function toggle(i: number) {
     <div class="grain"></div>
     <div class="vignette"></div>
 
+      <div class="back-container">
+      <button class="back-btn" @click="goBack" aria-label="Voltar">
+        <span class="back-btn-bg"></span>
+        <span class="back-btn-border"></span>
+        <span class="back-btn-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M15 6l-6 6 6 6"/>
+          </svg>
+        </span>
+        <span class="back-btn-text">
+          <small>RETORNAR</small>
+          <strong>às Eras Geológicas</strong>
+        </span>
+        <span class="back-btn-glow"></span>
+      </button>
+    </div>
+
     <!-- HERO -->
     <div class="hero">
       <img src="@/assets/cenozoico.png" alt="Era Cenozoica" class="hero-img" />
@@ -175,6 +219,16 @@ function toggle(i: number) {
             Geleiras moldaram continentes, savanas se expandiram e, em algum
             momento, um pequeno primata bípede começou a observar o céu — e a
             contar histórias sobre ele.
+          </p>
+          <p>
+            O clima oscilou em ciclos glaciais e interglaciais, esculpindo fiordes,
+            vales em U e moreias. Os Andes, os Alpes e o Himalaia se ergueram nesta
+            era, redesenhando o relevo do planeta.
+          </p>
+          <p>
+            No Quaternário, a megafauna sucumbiu às mudanças climáticas e à caça
+            humana — e o Homo sapiens, em apenas alguns milênios, transformou-se
+            na primeira espécie capaz de moldar geologicamente o próprio mundo.
           </p>
         </div>
 
@@ -257,47 +311,45 @@ function toggle(i: number) {
 
       <!-- CARDS -->
       <div class="cards">
-        <article class="card" data-index="01">
-          <div class="card-num">01</div>
+        <article class="card" data-index="04">
+          <div class="card-num">04</div>
           <div class="card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-              <path d="M12 4v16M4 12h16" />
-              <circle cx="12" cy="12" r="3" />
+              <path d="M3 18c4-2 6-2 9 0s5 2 9 0"/>
+              <path d="M5 13l3-7 4 5 4-6 3 8"/>
             </svg>
           </div>
-          <h3>Paleogeno</h3>
-          <p>Recuperação da vida após a extinção. Surgimento dos primeiros primatas e mamíferos modernos.</p>
+          <h3>Eras do Gelo</h3>
+          <p>Ciclos glaciais cobrem o hemisfério norte e desenham fiordes, lagos e vales esculpidos pelo gelo.</p>
           <span class="card-glow"></span>
         </article>
 
-        <article class="card" data-index="02">
-          <div class="card-num">02</div>
+        <article class="card" data-index="05">
+          <div class="card-num">05</div>
           <div class="card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-              <path d="M8 12l4-4 4 4" />
-              <path d="M12 16v-8" />
-              <circle cx="12" cy="19" r="2" />
+              <path d="M4 20l5-9 4 5 7-10"/>
+              <path d="M14 6h6v6"/>
             </svg>
           </div>
-          <h3>Neogeno</h3>
-          <p>Diversificação dos mamíferos. Aparecimento de cavalos, elefantes e os primeiros hominídeos.</p>
+          <h3>Ascensão dos Andes</h3>
+          <p>Colisão de placas tectônicas ergue cordilheiras gigantescas — Andes, Alpes e Himalaia tomam forma.</p>
           <span class="card-glow"></span>
         </article>
 
-        <article class="card" data-index="03">
-          <div class="card-num">03</div>
+        <article class="card" data-index="06">
+          <div class="card-num">06</div>
           <div class="card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-              <path d="M12 4L12 20" />
-              <path d="M4 12L20 12" />
-              <circle cx="7" cy="7" r="1.5" />
-              <circle cx="17" cy="17" r="1.5" />
+              <circle cx="12" cy="7" r="3"/>
+              <path d="M6 21c1-5 4-7 6-7s5 2 6 7"/>
             </svg>
           </div>
-          <h3>Quaternário</h3>
-          <p>Era do gelo, megafauna e o surgimento do Homo sapiens.</p>
+          <h3>O Despertar Humano</h3>
+          <p>Em apenas 300 mil anos, o Homo sapiens passou de presa a engenheiro planetário — definindo o Antropoceno.</p>
           <span class="card-glow"></span>
         </article>
+
       </div>
 
       <!-- Loading / Error -->
@@ -1016,5 +1068,138 @@ function toggle(i: number) {
   .meta-divider { display: none; }
   .timeline { grid-template-columns: 1fr; }
   .era-detail { padding: 28px 20px; }
+}
+/* === BOTÃO VOLTAR — ouro/Cinzel === */
+.back-container {
+  position: fixed;
+  top: 28px;
+  left: 28px;
+  z-index: 9999;
+  animation: rise 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  top: 100px;
+}
+
+.back-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 22px 12px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #f5e6c8;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.04em;
+  overflow: visible;
+  isolation: isolate;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.back-btn-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(255, 245, 214, 0.06), rgba(10, 6, 4, 0.75));
+  backdrop-filter: blur(12px);
+  border-radius: 2px;
+  z-index: -2;
+  transition: background 0.5s ease;
+}
+.back-btn-border {
+  position: absolute; inset: 0;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 2px;
+  z-index: -1;
+  transition: border-color 0.5s ease, box-shadow 0.5s ease;
+}
+.back-btn-border::before,
+.back-btn-border::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 10px;
+  border: 1px solid #d4af37;
+  transition: width 0.5s ease, height 0.5s ease;
+}
+.back-btn-border::before {
+  top: -1px; left: -1px;
+  border-right: none; border-bottom: none;
+}
+.back-btn-border::after {
+  bottom: -1px; right: -1px;
+  border-left: none; border-top: none;
+}
+.back-btn-arrow {
+  display: grid; place-items: center;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  color: #d4af37;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+              background 0.5s ease, color 0.4s ease, border-color 0.4s ease;
+}
+.back-btn-arrow svg { width: 14px; height: 14px; }
+.back-btn-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+.back-btn-text small {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.32em;
+  color: #d4af37;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.back-btn-text strong {
+  font-weight: 500;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #f1d98a;
+  font-family: 'Cormorant Garamond', serif;
+}
+.back-btn-glow {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.35), transparent 65%);
+  filter: blur(18px);
+  opacity: 0;
+  z-index: -3;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+.back-btn:hover {
+  transform: translateX(-4px);
+}
+.back-btn:hover .back-btn-bg {
+  background: linear-gradient(160deg, rgba(212, 175, 55, 0.12), rgba(10, 6, 4, 0.85));
+}
+.back-btn:hover .back-btn-border {
+  border-color: rgba(241, 217, 138, 0.9);
+  box-shadow: 0 0 24px -4px rgba(212, 175, 55, 0.45),
+              inset 0 0 18px -8px rgba(212, 175, 55, 0.4);
+}
+.back-btn:hover .back-btn-border::before,
+.back-btn:hover .back-btn-border::after {
+  width: 16px; height: 16px;
+}
+.back-btn:hover .back-btn-arrow {
+  transform: translateX(-3px);
+  background: rgba(212, 175, 55, 0.18);
+  border-color: #f1d98a;
+  color: #fff5d6;
+}
+.back-btn:hover .back-btn-glow { opacity: 1; }
+.back-btn:active { transform: translateX(-2px) scale(0.98); }
+.back-btn:focus-visible {
+  outline: none;
+}
+.back-btn:focus-visible .back-btn-border {
+  border-color: #f1d98a;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.25), 0 0 24px -4px rgba(212, 175, 55, 0.55);
+}
+@media (max-width: 720px) {
+  .back-container { top: 16px; left: 16px; }
+  .back-btn-text small { font-size: 0.55rem; }
+  .back-btn-text strong { font-size: 0.85rem; }
 }
 </style>

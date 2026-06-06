@@ -3,6 +3,22 @@
     <!-- Decorative overlays -->
     <div class="grain"></div>
     <div class="vignette"></div>
+    <div class="back-container">
+      <button class="back-btn" @click="goBack" aria-label="Voltar">
+        <span class="back-btn-bg"></span>
+        <span class="back-btn-border"></span>
+        <span class="back-btn-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M15 6l-6 6 6 6"/>
+          </svg>
+        </span>
+        <span class="back-btn-text">
+          <small>RETORNAR</small>
+          <strong>às Eras Geológicas</strong>
+        </span>
+        <span class="back-btn-glow"></span>
+      </button>
+    </div>
 
     <!-- HERO -->
     <div class="hero">
@@ -67,6 +83,17 @@
           <p>
             A era encerra-se com a Grande Morte do fim do Permiano — a maior
             extinção em massa da história, que apagou 96% das espécies marinhas.
+          </p>
+          <p>
+            Durante seus 289 milhões de anos, a vida saiu dos oceanos, conquistou
+            os continentes, desenvolveu pulmões, esqueletos internos, sementes
+            e ovos amnióticos — inovações que mudariam para sempre o destino
+            da biosfera.
+          </p>
+          <p>
+            Foi também o palco da formação de Pangeia, o supercontinente que
+            reuniria todas as massas terrestres em uma única paisagem árida
+            cercada pelo oceano global Pantalassa.
           </p>
         </div>
 
@@ -173,6 +200,47 @@
           <p>A extinção do fim do Permiano apagou 96% das espécies marinhas — a maior catástrofe biológica da história.</p>
           <span class="card-glow"></span>
         </article>
+
+        <article class="card">
+          <div class="card-num">04</div>
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+              <path d="M12 3v18"/>
+              <path d="M5 8c4-3 10-3 14 0"/>
+              <path d="M5 16c4 3 10 3 14 0"/>
+            </svg>
+          </div>
+          <h3>Formação da Pangeia</h3>
+          <p>No fim do Permiano, todos os continentes se fundiram em um único supercontinente cercado pelo oceano Pantalassa.</p>
+          <span class="card-glow"></span>
+        </article>
+
+        <article class="card">
+          <div class="card-num">05</div>
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+              <path d="M4 20c2-6 6-9 8-9s6 3 8 9"/>
+              <circle cx="9" cy="8" r="2"/>
+              <circle cx="15" cy="8" r="2"/>
+            </svg>
+          </div>
+          <h3>Conquista da Terra</h3>
+          <p>Plantas, artrópodes e tetrápodes deixam o ambiente aquático e colonizam definitivamente os continentes.</p>
+          <span class="card-glow"></span>
+        </article>
+
+        <article class="card">
+          <div class="card-num">06</div>
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+              <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/>
+            </svg>
+          </div>
+          <h3>Era dos Peixes</h3>
+          <p>O Devoniano vê surgir mandíbulas, escamas blindadas e os primeiros vertebrados a respirar fora d'água.</p>
+          <span class="card-glow"></span>
+        </article>
+
       </div>
 
       <!-- LINHA DO TEMPO -->
@@ -264,11 +332,13 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from "vue-router";
 
 const eras = ref([])
 const activeIndex = ref(null)
 const loading = ref(true)
 const error = ref(false)
+const router = useRouter();
 
 const carouselImages = ref([
   { url: "https://cdn.universoracionalista.org/wp-content/uploads/2022/04/tribolitas-canibais.jpg", caption: "Trilobitas — os senhores dos mares cambrianos", tag: "Cambriano" },
@@ -276,7 +346,11 @@ const carouselImages = ref([
   { url: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiqfZ2C13ZhtbB6_Lk0sTeJIFzscbgjIudeN8u4b-9buDvNPhsX8Lp1XjQ32h1NgGmiDkGT3limuatUBQtt8ZBubzuKzi-0yKbraG5hIG1mqBvKvQVXkK3dTnl0iOXrT9cvp-A1Ge-2_yht/s1600/Cooksonia+-+Nobu+Tamura.jpg", caption: "Primeiras plantas conquistam o continente", tag: "Siluriano" },
   { url: "https://media.gettyimages.com/id/168838727/pt/vetorial/holoptychius-nobilissimus-tulerpeton-and-moythomasia-all-prehistoric-fish-from-the-devonian.jpg?s=612x612&w=0&k=20&c=cq3XGX10NTKhXLRwBcKhEj5p2uUsrdzqJ_Ryz_8JuJk=", caption: "Era dos Peixes — placodermes blindados dominam os mares", tag: "Devoniano" },
   { url: "https://media.gettyimages.com/id/1402268341/pt/vetorial/artwork-of-giant-dragonfly-meganeura.jpg?s=612x612&w=0&k=20&c=1yPYdeY6rOfxpxqq3TiUHZ1_JmrPPyV4eD-9-zhIn2E=", caption: "Florestas pantanosas formam os carvões do futuro", tag: "Carbonífero" },
-  { url: "https://abcterra.com/wp-content/uploads/2023/10/Captura-de-Tela-2023-10-16-as-14.28.13-e1697477644386.png", caption: "A Grande Morte — fim do Permiano", tag: "Permiano" }
+  { url: "https://abcterra.com/wp-content/uploads/2023/10/Captura-de-Tela-2023-10-16-as-14.28.13-e1697477644386.png", caption: "A Grande Morte — fim do Permiano", tag: "Permiano" },
+  { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Dunkleosteus_BW.jpg/1200px-Dunkleosteus_BW.jpg", caption: "Dunkleosteus — o predador couraçado dos mares devonianos", tag: "Devoniano" },
+  { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Tiktaalik_BW.jpg/1200px-Tiktaalik_BW.jpg", caption: "Tiktaalik — o elo entre peixes e tetrápodes", tag: "Devoniano" },
+  { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Meganeura.jpg/1200px-Meganeura.jpg", caption: "Meganeura — libélulas com 70 cm de envergadura", tag: "Carbonífero" },
+  { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Dimetrodon_grandis.jpg/1200px-Dimetrodon_grandis.jpg", caption: "Dimetrodon — o sinapsídeo de vela dorsal", tag: "Permiano" }
 ])
 
 const carouselIndex = ref(0)
@@ -300,6 +374,10 @@ function goToSlide(i) { carouselIndex.value = i }
 function nextSlide() { carouselIndex.value = (carouselIndex.value + 1) % carouselImages.value.length }
 function prevSlide() {
   carouselIndex.value = (carouselIndex.value - 1 + carouselImages.value.length) % carouselImages.value.length
+}
+
+function goBack() {
+  router.back();
 }
 
 // Carregar dados
@@ -954,5 +1032,138 @@ function toggle(i) {
   .timeline { grid-template-columns: repeat(2, 1fr); gap: 32px 16px; }
   .timeline-track { display: none; }
   .era-detail { padding: 28px 20px; }
+}
+/* === BOTÃO VOLTAR — ouro/Cinzel === */
+.back-container {
+  position: fixed;
+  top: 28px;
+  left: 28px;
+  z-index: 9999;
+  animation: rise 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  top: 100px;
+}
+
+.back-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 22px 12px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #f5e6c8;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.04em;
+  overflow: visible;
+  isolation: isolate;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.back-btn-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(255, 245, 214, 0.06), rgba(10, 6, 4, 0.75));
+  backdrop-filter: blur(12px);
+  border-radius: 2px;
+  z-index: -2;
+  transition: background 0.5s ease;
+}
+.back-btn-border {
+  position: absolute; inset: 0;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 2px;
+  z-index: -1;
+  transition: border-color 0.5s ease, box-shadow 0.5s ease;
+}
+.back-btn-border::before,
+.back-btn-border::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 10px;
+  border: 1px solid #d4af37;
+  transition: width 0.5s ease, height 0.5s ease;
+}
+.back-btn-border::before {
+  top: -1px; left: -1px;
+  border-right: none; border-bottom: none;
+}
+.back-btn-border::after {
+  bottom: -1px; right: -1px;
+  border-left: none; border-top: none;
+}
+.back-btn-arrow {
+  display: grid; place-items: center;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  color: #d4af37;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+              background 0.5s ease, color 0.4s ease, border-color 0.4s ease;
+}
+.back-btn-arrow svg { width: 14px; height: 14px; }
+.back-btn-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+.back-btn-text small {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.32em;
+  color: #d4af37;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.back-btn-text strong {
+  font-weight: 500;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #f1d98a;
+  font-family: 'Cormorant Garamond', serif;
+}
+.back-btn-glow {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.35), transparent 65%);
+  filter: blur(18px);
+  opacity: 0;
+  z-index: -3;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+.back-btn:hover {
+  transform: translateX(-4px);
+}
+.back-btn:hover .back-btn-bg {
+  background: linear-gradient(160deg, rgba(212, 175, 55, 0.12), rgba(10, 6, 4, 0.85));
+}
+.back-btn:hover .back-btn-border {
+  border-color: rgba(241, 217, 138, 0.9);
+  box-shadow: 0 0 24px -4px rgba(212, 175, 55, 0.45),
+              inset 0 0 18px -8px rgba(212, 175, 55, 0.4);
+}
+.back-btn:hover .back-btn-border::before,
+.back-btn:hover .back-btn-border::after {
+  width: 16px; height: 16px;
+}
+.back-btn:hover .back-btn-arrow {
+  transform: translateX(-3px);
+  background: rgba(212, 175, 55, 0.18);
+  border-color: #f1d98a;
+  color: #fff5d6;
+}
+.back-btn:hover .back-btn-glow { opacity: 1; }
+.back-btn:active { transform: translateX(-2px) scale(0.98); }
+.back-btn:focus-visible {
+  outline: none;
+}
+.back-btn:focus-visible .back-btn-border {
+  border-color: #f1d98a;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.25), 0 0 24px -4px rgba(212, 175, 55, 0.55);
+}
+@media (max-width: 720px) {
+  .back-container { top: 16px; left: 16px; }
+  .back-btn-text small { font-size: 0.55rem; }
+  .back-btn-text strong { font-size: 0.85rem; }
 }
 </style>

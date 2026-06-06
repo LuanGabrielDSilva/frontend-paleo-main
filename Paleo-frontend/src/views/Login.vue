@@ -92,10 +92,9 @@ async function handleLogin() {
       user.token
     );
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(user)
-    );
+    localStorage.setItem("token", user.token);
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("role", user.role);
 
     if (
       user.role === "admin"
