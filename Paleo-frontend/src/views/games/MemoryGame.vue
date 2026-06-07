@@ -68,7 +68,7 @@ const difficulties: Difficulty[] = ["easy", "medium", "hard"];
 const rewardMap: Record<Difficulty, number> = {
   easy: 200,
   medium: 500,
-  hard: 1000,
+  hard: 100000,
 };
 
 const cardCountMap: Record<Difficulty, number> = {

@@ -7,11 +7,28 @@ type Order = {
   total: number;
   status: string;
   created_at: string;
-  user: { name: string; email: string };
+
+  user: {
+    name: string;
+    email: string;
+  };
+
+  rua: string;
+  numero: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  cep: string;
+  complemento?: string;
+
   items: {
     id: string;
     quantity: number;
-    product: { name: string; image: string; price: number };
+    product: {
+      name: string;
+      image: string;
+      price: number;
+    };
   }[];
 };
 
@@ -303,6 +320,23 @@ function timeAgo(iso: string) {
             <div class="tl-step" :class="{ done: statusMeta(selected.status).step >= 3 }">
               <span class="tl-dot"></span><span>Entregue ao cliente</span>
             </div>
+          </section>
+
+          <section class="modal-address">
+            <h3>Endereço de entrega</h3>
+
+            <p>
+              {{ selected.rua }}, {{ selected.numero }}
+              <span v-if="selected.complemento"> - {{ selected.complemento }}</span>
+            </p>
+
+            <p>
+              {{ selected.bairro }} - {{ selected.cidade }}/{{ selected.estado }}
+            </p>
+
+            <p>
+              CEP: {{ selected.cep }}
+            </p>
           </section>
 
           <section class="modal-items">
@@ -631,5 +665,27 @@ function timeAgo(iso: string) {
 
 .fade-enter-active, .fade-leave-active { transition: opacity .25s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.modal-address {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-bottom: 24px;
+  background: var(--bg-2);
+}
+
+.modal-address h3 {
+  font-family: var(--font-d);
+  font-size: 1rem;
+  margin-bottom: 10px;
+  color: var(--gold);
+}
+
+.modal-address p {
+  margin: 4px 0;
+  color: var(--text);
+  font-family: var(--font-b);
+  font-size: .9rem;
+}
 
 </style>
