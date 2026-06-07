@@ -1,9 +1,7 @@
 <template>
   <div class="page">
-    <!-- ============================= HERO ============================= -->
     <section class="hero" data-testid="home-hero">
 
-    <!-- Partículas animadas de poeira fóssil -->
       <div class="particles" aria-hidden="true">
         <span
           v-for="p in particles"
@@ -19,6 +17,7 @@
           }"
         />
       </div>
+      
       <div class="hero-content">
         <div class="hero-pre-title anim" style="animation-delay: 0.2s">
           <span class="line-deco"></span>
@@ -33,6 +32,7 @@
           Desvende os segredos de criaturas que caminharam sobre a Terra há milhões de anos.
           Uma jornada através do tempo, gravada em pedra e osso.
         </p>
+        
         <div class="hero-buttons anim" style="animation-delay: 0.8s">
           <router-link to="/animals" class="btn-primary" data-testid="hero-cta-primary">
             EXPLORAR COLEÇÃO
@@ -42,7 +42,6 @@
           </router-link>
         </div>
 
-        <!-- Indicador visual para incentivar o usuário a rolar a página -->
         <div class="scroll-cue anim" style="animation-delay: 1.2s" aria-hidden="true">
           <span class="scroll-cue__label">Role para explorar</span>
           <span class="scroll-cue__line"></span>
@@ -50,7 +49,6 @@
       </div>
     </section>
 
-    <!-- ====================== ESTATÍSTICAS ====================== -->
     <section class="stats" data-testid="home-stats">
       <div
         v-for="(s, i) in stats"
@@ -63,14 +61,12 @@
       </div>
     </section>
 
-    <!-- ====================== O QUE É PALEONTOLOGIA ====================== -->
     <section class="section intro" data-testid="home-intro">
       <header class="section-head">
         <span class="eyebrow">— A CIÊNCIA —</span>
         <h2 class="section-title">O que é a <span class="gold-text">Paleontologia</span></h2>
         <p class="section-sub">
           A ciência que estuda a vida do passado a partir de vestígios preservados na rocha.
-          Une geologia, biologia e história em uma única narrativa: a saga da vida na Terra.
         </p>
       </header>
 
@@ -88,16 +84,12 @@
       </div>
     </section>
 
-    <!-- ====================== ERAS / TIMELINE ====================== -->
     <section class="section eras" data-testid="home-eras">
       <header class="section-head">
         <span class="eyebrow">— LINHA DO TEMPO —</span>
         <h2 class="section-title">As <span class="gold-text">Grandes Eras</span></h2>
-        <p class="section-sub">
-          Quatro capítulos cravados na rocha. Cada era guarda mistérios, criaturas e
-          paisagens que moldaram o nosso mundo.
-        </p>
       </header>
+      
       <div class="eras-grid">
         <article
           v-for="(era, i) in eras"
@@ -118,7 +110,6 @@
       </div>
     </section>
 
-    <!-- ====================== DESTAQUE: ESCAVAÇÃO ====================== -->
     <section class="feature feature--left" data-testid="home-feature-excavation">
       <div class="feature__media">
         <img :src="excavationImg" alt="Sítio de escavação paleontológica" />
@@ -126,31 +117,17 @@
       </div>
       <div class="feature__body">
         <span class="eyebrow">— CIÊNCIA —</span>
-        <h2 class="section-title">
-          A Paleontologia<br /><span class="gold-text">é a memória da Terra</span>
-        </h2>
+        <h2 class="section-title">A Paleontologia<br /><span class="gold-text">é a memória da Terra</span></h2>
         <p class="feature__desc">
-          Mais do que apenas ossos e fósseis, a paleontologia é a ciência que reconstrói
-          a história da vida no planeta. Através de vestígios preservados ao longo de milhões
-          de anos, revelamos como as espécies surgiram, evoluíram, dominaram e desapareceram.
-        </p>
-        <p class="feature__desc">
-          É uma viagem no tempo feita com paciência, rigor científico e fascínio.
-          Cada fóssil é uma peça de um enorme quebra-cabeça que conta a saga da vida
-          desde os primeiros organismos até os gigantes que dominaram o mundo.
+          Mais do que apenas ossos e fósseis, a paleontologia é a ciência que reconstrói a história da vida no planeta...
         </p>
       </div>
     </section>
 
-    <!-- ====================== COMO NASCE UM FÓSSIL ====================== -->
     <section class="section process" data-testid="home-process">
       <header class="section-head">
         <span class="eyebrow">— PROCESSO —</span>
         <h2 class="section-title">Como <span class="gold-text">nasce um fóssil</span></h2>
-        <p class="section-sub">
-          A fossilização é um evento raro. Para que um vestígio atravesse milhões de anos
-          intacto, uma sequência precisa de condições precisa acontecer.
-        </p>
       </header>
 
       <ol class="steps">
@@ -169,49 +146,27 @@
       </ol>
     </section>
 
-    <!-- ====================== DESTAQUE: CIÊNCIA ====================== -->
     <section class="feature feature--right" data-testid="home-feature-science">
       <div class="feature__body">
         <span class="eyebrow">— CIÊNCIA —</span>
-        <h2 class="section-title">
-          Datação<br /><span class="gold-text">e estratigrafia</span>
-        </h2>
-        <p class="feature__desc">
-          Do Cambriano ao Holoceno: visualize a distribuição dos fósseis ao longo
-          das eras, com dados de espécimes catalogados, períodos de extinção e
-          marcos evolutivos.
-        </p>
+        <h2 class="section-title">Datação<br /><span class="gold-text">e estratigrafia</span></h2>
+        <p class="feature__desc">Do Cambriano ao Holoceno: visualize a distribuição dos fósseis...</p>
         <div class="feature__metrics">
-          <div class="metric">
-            <span class="metric__val gold-text">540M</span>
-            <span class="metric__lbl">anos cobertos</span>
-          </div>
-          <div class="metric">
-            <span class="metric__val gold-text">12</span>
-            <span class="metric__lbl">períodos</span>
-          </div>
-          <div class="metric">
-            <span class="metric__val gold-text">5</span>
-            <span class="metric__lbl">extinções em massa</span>
-          </div>
+          <div class="metric"><span class="metric__val gold-text">540M</span><span class="metric__lbl">anos cobertos</span></div>
+          <div class="metric"><span class="metric__val gold-text">12</span><span class="metric__lbl">períodos</span></div>
+          <div class="metric"><span class="metric__val gold-text">5</span><span class="metric__lbl">extinções em massa</span></div>
         </div>
-        <router-link to="/eras" class="btn-secondary btn-secondary--sm">
-          EXPLORAR LINHA DO TEMPO
-        </router-link>
+        <router-link to="/eras" class="btn-secondary btn-secondary--sm">EXPLORAR LINHA DO TEMPO</router-link>
       </div>
       <div class="feature__media">
         <img :src="fossilChartImg" alt="Gráfico de distribuição de fósseis" />
       </div>
     </section>
 
-    <!-- ====================== GRANDES DESCOBERTAS ====================== -->
     <section class="section discoveries" data-testid="home-discoveries">
       <header class="section-head">
         <span class="eyebrow">— MARCOS HISTÓRICOS —</span>
         <h2 class="section-title">Grandes <span class="gold-text">Descobertas</span></h2>
-        <p class="section-sub">
-          Achados que mudaram para sempre o entendimento da vida pré-histórica.
-        </p>
       </header>
 
       <div class="timeline-disc">
@@ -231,7 +186,6 @@
       </div>
     </section>
 
-    <!-- ====================== CURIOSIDADES ====================== -->
     <section class="section facts" data-testid="home-facts">
       <header class="section-head">
         <span class="eyebrow">— VOCÊ SABIA? —</span>
@@ -252,59 +206,38 @@
       </div>
     </section>
 
-    <!-- ====================== CRIATURAS DA FICÇÃO ====================== -->
-<section class="section movies" data-testid="home-movies">
-  <header class="section-head">
-    <span class="eyebrow">— UNIVERSO JURASSIC —</span>
-    <h2 class="section-title">
-      Criaturas da <span class="gold-text">Ficção</span>
-    </h2>
-    <p class="section-sub">
-      Algumas das criaturas mais famosas dos filmes e séries de Jurassic World.
-      Embora inspiradas na paleontologia, estas espécies foram criadas para a ficção.
-    </p>
-  </header>
-
-  <div class="movies-grid">
-    <router-link
-      v-for="(movie, i) in movieCreatures"
-      :key="movie.name"
-      :to="`/ficcao/${movie.slug}`"
-      class="movie-card movie-link"
-      :style="{ animationDelay: 0.08 * i + 's' }"
-    >
-      <img :src="movie.image" :alt="movie.name" class="movie-image" />
-
-      <div class="movie-content">
-        <span class="movie-type">{{ movie.origin }}</span>
-
-        <h3 class="movie-name">
-          {{ movie.name }}
-        </h3>
-
-        <p class="movie-desc">
-          {{ movie.desc }}
+    <section class="section movies" data-testid="home-movies">
+      <header class="section-head">
+        <span class="eyebrow">— UNIVERSO JURASSIC —</span>
+        <h2 class="section-title">Criaturas da <span class="gold-text">Ficção</span></h2>
+        <p class="section-sub">
+          Algumas das criaturas mais famosas dos filmes e séries de Jurassic World.
         </p>
-      </div>
-    </router-link>
-  </div>
-</section>
+      </header>
 
-    <!-- ====================== CTA FINAL ====================== -->
-    <section
-      class="cta"
-      :style="{ backgroundImage: `linear-gradient(180deg, hsla(30,20%,5%,0.55), hsla(30,20%,5%,0.92)), url(${museumImg})` }"
-      data-testid="home-cta"
-    >
+      <div class="movies-grid">
+        <router-link
+          v-for="(movie, i) in movieCreatures"
+          :key="movie.name"
+          :to="`/ficcao/${movie.slug}`"
+          class="movie-card movie-link"
+          :style="{ animationDelay: 0.08 * i + 's' }"
+        >
+          <img :src="movie.image" :alt="movie.name" class="movie-image" />
+          <div class="movie-content">
+            <span class="movie-type">{{ movie.origin }}</span>
+            <h3 class="movie-name">{{ movie.name }}</h3>
+            <p class="movie-desc">{{ movie.desc }}</p>
+          </div>
+        </router-link>
+      </div>
+    </section>
+
+    <section class="cta" :style="{ backgroundImage: `linear-gradient(180deg, hsla(30,20%,5%,0.55), hsla(30,20%,5%,0.92)), url(${museumImg})` }" data-testid="home-cta">
       <div class="cta__inner">
         <span class="eyebrow">— LOJA OFICIAL —</span>
-        <h2 class="section-title">
-          Explore a <span class="gold-text">Loja Paleo</span>
-        </h2>
-        <p class="cta__desc">
-          Réplicas de fósseis, camisetas temáticas, livros, miniaturas e souvenirs
-          exclusivos para verdadeiros apaixonados pela pré-história.
-        </p>
+        <h2 class="section-title">Explore a <span class="gold-text">Loja Paleo</span></h2>
+        <p class="cta__desc">Réplicas de fósseis, souvenirs exclusivos...</p>
         <div class="hero-buttons">
           <router-link to="/shop" class="btn-primary">EXPLORAR A LOJA</router-link>
           <router-link to="/cart" class="btn-secondary">VER COMPRAS</router-link>
@@ -312,7 +245,6 @@
       </div>
     </section>
 
-    <!-- ====================== RODAPÉ ====================== -->
     <footer class="foot" data-testid="home-foot">
       <span class="foot__mark">◆</span>
       <p>PALEO PARK · gravado em pedra, contado em luz</p>
@@ -323,15 +255,18 @@
 <script setup>
 import { ref } from 'vue'
 
+// Importações dos caminhos das mídias locais (Imagens informativas)
 import excavationImg from '@/assets/HomeImagem/excavation.jpg'
 import museumImg from '@/assets/HomeImagem/museum.jpg'
 import fossilChartImg from '@/assets/HomeImagem/GraficoFossil.jpg'
 
+// Importações das imagens das criaturas híbridas da ficção
 import indominusImg from '@/assets/Movies/indominus.jpg'
 import indoraptorImg from '@/assets/Movies/indoraptor.jpg'
 import scorpiusImg from '@/assets/Movies/scorpios.jpg'
 import distortusImg from '@/assets/Movies/distortus.jpg'
 
+// Objeto estático contendo os dados estruturados dos animais da ficção (Alimenta os cards clicáveis)
 const movieCreatures = [
   {
     slug: 'indominus-rex',
@@ -363,12 +298,10 @@ const movieCreatures = [
   }
 ]
 
-/* Partículas do hero 
-   PARTÍCULAS DECORATIVAS
-   Simulam poeira flutuando
-   para criar atmosfera antiga
-====================== */
-
+/* SISTEMA DE PARTÍCULAS REATIVAS (ref):
+  Cria uma lista reativa com 30 itens gerados dinamicamente com matemática matemática pura (Math.random).
+  Define tamanho (size), posicionamento (left/top) e duração da animação para simular o efeito de poeira antiga no Hero.
+*/
 const particles = ref(
   Array.from({ length: 30 }, (_, i) => ({
     id: i,
@@ -380,7 +313,7 @@ const particles = ref(
   }))
 )
 
-/* Estatísticas */
+// Listas estáticas de conteúdo para povoar as seções da página sem precisar sobrecarregar o banco de dados
 const stats = [
   { value: '540M+', label: 'anos de história' },
   { value: '1.200', label: 'fósseis catalogados' },
@@ -388,116 +321,39 @@ const stats = [
   { value: '12',    label: 'eras geológicas' },
 ]
 
-/* Pilares da Paleontologia */
 const pillars = [
-  {
-    icon: '🦴',
-    title: 'Paleobiologia',
-    desc: 'Estuda os organismos do passado: sua anatomia, comportamento, dieta e relações ecológicas reconstruídas a partir de fósseis.',
-  },
-  {
-    icon: '🌑',
-    title: 'Paleogeologia',
-    desc: 'Analisa as rochas e os sedimentos que preservam os fósseis, revelando ambientes antigos e movimentos da crosta terrestre.',
-  },
-  {
-    icon: '🧬',
-    title: 'Paleoevolução',
-    desc: 'Mapeia como as espécies surgiram, se transformaram e se extinguiram ao longo de centenas de milhões de anos.',
-  },
-  {
-    icon: '🌋',
-    title: 'Paleoecologia',
-    desc: 'Reconstrói ecossistemas inteiros — climas, vegetação e cadeias alimentares — de mundos que nunca veremos.',
-  },
+  { icon: '🦴', title: 'Paleobiologia', desc: 'Estuda os organismos do passado: sua anatomia, comportamento, dieta...' },
+  { icon: '🌑', title: 'Paleogeologia', desc: 'Analisa as rochas e os sedimentos que preservam os fósseis...' },
+  { icon: '🧬', title: 'Paleoevolução', desc: 'Mapeia como as espécies surgiram, se transformaram e se extinguiram...' },
+  { icon: '🌋', title: 'Paleoecologia', desc: 'Reconstrói ecossistemas inteiros de mundos que nunca veremos.' },
 ]
 
-/* Eras */
 const eras = [
-  {
-    name: 'Paleozoica',
-    age: '541 – 252 Ma',
-    desc: 'A era dos primeiros vertebrados, das florestas de samambaias e dos mares cheios de trilobitas.',
-  },
-  {
-    name: 'Mesozoica',
-    age: '252 – 66 Ma',
-    desc: 'O reinado dos dinossauros. Pterossauros cruzando os céus e mares dominados por répteis colossais.',
-  },
-  {
-    name: 'Cenozoica',
-    age: '66 Ma – hoje',
-    desc: 'A ascensão dos mamíferos, das aves modernas e, por fim, o aparecimento dos primeiros hominídeos.',
-  },
+  { name: 'Paleozoica', age: '541 – 252 Ma', desc: 'A era dos primeiros vertebrados, das florestas de samambaias...' },
+  { name: 'Mesozoica', age: '252 – 66 Ma', desc: 'O reinado dos dinossauros. Pterossauros cruzando os céus...' },
+  { name: 'Cenozoica', age: '66 Ma – hoje', desc: 'A ascensão dos mamíferos, das aves modernas e dos primeiros hominídeos.' },
 ]
 
-/* Etapas da fossilização */
 const fossilSteps = [
-  {
-    title: 'Morte e soterramento',
-    desc: 'O organismo morre e é rapidamente coberto por sedimento — lama, areia ou cinzas — antes que a decomposição destrua seus restos.',
-  },
-  {
-    title: 'Decomposição parcial',
-    desc: 'As partes moles se perdem. Ossos, dentes, conchas e estruturas rígidas permanecem protegidos sob camadas de sedimento.',
-  },
-  {
-    title: 'Mineralização',
-    desc: 'Ao longo de milhões de anos, minerais dissolvidos na água infiltram-se nos restos, substituindo a matéria orgânica e formando rocha.',
-  },
-  {
-    title: 'Exposição e descoberta',
-    desc: 'Erosão, soerguimento tectônico ou escavação trazem o fóssil de volta à superfície — onde finalmente pode ser estudado.',
-  },
+  { title: 'Morte e soterramento', desc: 'O organismo morre e é rapidamente coberto por sedimento antes da decomposição.' },
+  { title: 'Decomposição parcial', desc: 'As partes moles se perdem. Estruturas rígidas permanecem protegidas.' },
+  { title: 'Mineralização', desc: 'Minerais infiltram-se nos restos, substituindo a matéria orgânica e formando rocha.' },
+  { title: 'Exposição e descoberta', desc: 'Erosão ou escavação trazem o fóssil de volta à superfície para estudo.' },
 ]
 
-/* Grandes descobertas */
 const discoveries = [
-  {
-    year: '1824',
-    title: 'Megalossauro',
-    desc: 'William Buckland descreve o primeiro dinossauro reconhecido cientificamente, inaugurando a paleontologia moderna.',
-  },
-  {
-    year: '1861',
-    title: 'Archaeopteryx',
-    desc: 'O elo entre répteis e aves é encontrado na Alemanha, confirmando a teoria evolutiva proposta por Darwin.',
-  },
-  {
-    year: '1902',
-    title: 'Tyrannosaurus rex',
-    desc: 'Barnum Brown descobre o primeiro esqueleto do mais famoso predador do Cretáceo em Montana, EUA.',
-  },
-  {
-    year: '1993',
-    title: 'Plumas em dinossauros',
-    desc: 'Fósseis chineses revelam dinossauros com penas, revolucionando a forma como os imaginamos.',
-  },
-  {
-    year: '2014',
-    title: 'Dreadnoughtus',
-    desc: 'Um dos maiores saurópodes já encontrados — 26 metros e cerca de 59 toneladas — é descrito na Patagônia.',
-  },
+  { year: '1824', title: 'Megalossauro', desc: 'William Buckland descreve o primeiro dinossauro reconhecido cientificamente.' },
+  { year: '1861', title: 'Archaeopteryx', desc: 'O elo entre répteis e aves é encontrado na Alemanha, confirmando a teoria de Darwin.' },
+  { year: '1902', title: 'Tyrannosaurus rex', desc: 'Barnum Brown descobre o primeiro esqueleto do predador em Montana.' },
+  { year: '1993', title: 'Plumas em dinossauros', desc: 'Fósseis chineses revelam dinossauros com penas, mudando o imaginário visual.' },
+  { year: '2014', title: 'Dreadnoughtus', desc: 'Um dos maiores saurópodes já encontrados é descrito na Patagônia.' },
 ]
 
-/* Curiosidades */
 const facts = [
-  {
-    title: 'As aves são dinossauros',
-    desc: 'Geneticamente, todas as aves modernas descendem diretamente de terópodes — o T. rex é parente de uma galinha.',
-  },
-  {
-    title: 'Petróleo é vida antiga',
-    desc: 'O petróleo se forma a partir de microrganismos marinhos soterrados há centenas de milhões de anos.',
-  },
-  {
-    title: 'Tubarões mais antigos que árvores',
-    desc: 'Os primeiros tubarões surgiram há cerca de 450 Ma; as árvores apareceram apenas 100 milhões de anos depois.',
-  },
-  {
-    title: '5 extinções em massa',
-    desc: 'A vida na Terra já foi quase exterminada cinco vezes. A mais famosa, há 66 Ma, encerrou a era dos dinossauros.',
-  },
+  { title: 'As aves são dinossauros', desc: 'Geneticamente, as aves descendem de terópodes — o T. rex é parente da galinha.' },
+  { title: 'Petróleo é vida antiga', desc: 'Forma-se a partir de microrganismos marinhos soterrados há milhões de anos.' },
+  { title: 'Tubarões mais antigos que árvores', desc: 'Tubarões surgiram há 450 Ma; as árvores apareceram 100 milhões de anos depois.' },
+  { title: '5 extinções em massa', desc: 'A vida na Terra já foi quase exterminada cinco vezes ao longo de sua história.' },
 ]
 </script>
 

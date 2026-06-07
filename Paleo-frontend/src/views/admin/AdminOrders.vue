@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import api from "../../services/api";
 
 type Order = {
@@ -39,6 +39,35 @@ const statusFilter = ref<"all" | "pending" | "on_the_way" | "delivered">("all");
 const sortBy = ref<"recent" | "oldest" | "highest" | "lowest">("recent");
 const selected = ref<Order | null>(null);
 
+/* =========================
+   CONFIRM DIALOG (substitui confirm() nativo)
+========================= */
+const confirmTarget = ref<Order | null>(null);
+const deleting = ref(false);
+
+function askDelete(order: Order) {
+  confirmTarget.value = order;
+}
+function cancelDelete() {
+  if (deleting.value) return;
+  confirmTarget.value = null;
+}
+async function confirmDelete() {
+  if (!confirmTarget.value || deleting.value) return;
+  const id = confirmTarget.value.id;
+  try {
+    deleting.value = true;
+    await api.delete(`/orders/${id}`);
+    if (selected.value?.id === id) selected.value = null;
+    confirmTarget.value = null;
+    await loadOrders();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    deleting.value = false;
+  }
+}
+
 async function loadOrders() {
   loading.value = true;
   try {
@@ -55,13 +84,6 @@ async function updateStatus(id: string, status: string) {
   if (selected.value?.id === id) {
     selected.value = orders.value.find((o) => o.id === id) ?? null;
   }
-}
-
-async function deleteOrder(id: string) {
-  if (!confirm("Deseja realmente deletar este pedido?")) return;
-  await api.delete(`/orders/${id}`);
-  if (selected.value?.id === id) selected.value = null;
-  await loadOrders();
 }
 
 onMounted(loadOrders);
@@ -123,6 +145,31 @@ function timeAgo(iso: string) {
   if (diff < 86400) return `${Math.floor(diff / 3600)} h`;
   return `${Math.floor(diff / 86400)} d`;
 }
+
+/* =========================
+   PAGINAÇÃO
+========================= */
+const currentPage = ref(1);
+const perPage = ref(10);
+
+const totalPages = computed(() => {
+  return Math.ceil(filtered.value.length / perPage.value) || 1;
+});
+
+const paginatedOrders = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value;
+  return filtered.value.slice(start, start + perPage.value);
+});
+
+function goToPage(page: number) {
+  if (page < 1 || page > totalPages.value) return;
+  currentPage.value = page;
+}
+
+// Resetar página ao mudar filtros/busca/ordenação
+watch([search, statusFilter, sortBy, perPage], () => {
+  currentPage.value = 1;
+});
 </script>
 
 <template>
@@ -209,85 +256,120 @@ function timeAgo(iso: string) {
     </section>
 
     <article
-  v-for="order in filtered"
-  :key="order.id"
-  class="order"
-  @click="selected = order"
->
-  <!-- LINHA 1: identificação + status + ações -->
-  <div class="order-top">
-    <div class="ord-id">
-      <span class="ord-code">{{ shortId(order.id) }}</span>
-      <span class="ord-time">há {{ timeAgo(order.created_at) }}</span>
-    </div>
+      v-for="order in paginatedOrders"
+      :key="order.id"
+      class="order"
+      @click="selected = order"
+    >
+      <!-- LINHA 1: identificação + status + ações -->
+      <div class="order-top">
+        <div class="ord-id">
+          <span class="ord-code">{{ shortId(order.id) }}</span>
+          <span class="ord-time">há {{ timeAgo(order.created_at) }}</span>
+        </div>
 
-    <div class="ord-user">
-      <div class="avatar">{{ order.user.name.charAt(0).toUpperCase() }}</div>
-      <div class="ord-user-text">
-        <strong>{{ order.user.name }}</strong>
-        <span>{{ order.user.email }}</span>
+        <div class="ord-user">
+          <div class="avatar">{{ order.user.name.charAt(0).toUpperCase() }}</div>
+          <div class="ord-user-text">
+            <strong>{{ order.user.name }}</strong>
+            <span>{{ order.user.email }}</span>
+          </div>
+        </div>
+
+        <div class="ord-end">
+          <span class="ord-total">{{ brl(order.total) }}</span>
+          <span :class="['badge', statusMeta(order.status).tone]">
+            {{ statusMeta(order.status).label }}
+          </span>
+        </div>
+
+        <div class="ord-actions" @click.stop>
+          <select
+            :value="order.status"
+            @change="updateStatus(order.id, ($event.target as HTMLSelectElement).value)"
+          >
+            <option value="pending">Preparando</option>
+            <option value="on_the_way">Chegando</option>
+            <option value="delivered">Entregue</option>
+          </select>
+          <button class="del" @click="askDelete(order)" title="Deletar pedido">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- LINHA 2: pipeline + itens -->
+      <div class="order-bottom">
+        <div class="ord-pipe">
+          <div class="pipe">
+            <div
+              class="pipe-fill"
+              :style="{ width: (statusMeta(order.status).step / 3) * 100 + '%' }"
+            ></div>
+          </div>
+          <div class="pipe-steps">
+            <span :class="{ done: statusMeta(order.status).step >= 1 }">Preparo</span>
+            <span :class="{ done: statusMeta(order.status).step >= 2 }">Rota</span>
+            <span :class="{ done: statusMeta(order.status).step >= 3 }">Entregue</span>
+          </div>
+        </div>
+
+        <div class="ord-items">
+          <div class="thumbs">
+            <img
+              v-for="item in order.items.slice(0, 4)"
+              :key="item.id"
+              :src="item.product.image"
+              :alt="item.product.name"
+            />
+            <span v-if="order.items.length > 4" class="more">
+              +{{ order.items.length - 4 }}
+            </span>
+          </div>
+          <span class="items-count">
+            {{ order.items.reduce((a, i) => a + i.quantity, 0) }} itens
+          </span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PAGINAÇÃO -->
+    <div v-if="totalPages > 1" class="pagination">
+      <div class="pagination-controls">
+        <button 
+          class="page-btn" 
+          @click="goToPage(currentPage - 1)" 
+          :disabled="currentPage === 1"
+        >
+          ← Anterior
+        </button>
+
+        <div class="page-info">
+          <span class="current">{{ currentPage }}</span>
+          <span class="separator">/</span>
+          <span class="total">{{ totalPages }}</span>
+        </div>
+
+        <button 
+          class="page-btn" 
+          @click="goToPage(currentPage + 1)" 
+          :disabled="currentPage === totalPages"
+        >
+          Próxima →
+        </button>
+      </div>
+
+      <div class="per-page">
+        <label>Por página:</label>
+        <select v-model.number="perPage">
+          <option :value="10">10</option>
+          <option :value="20">20</option>
+          <option :value="50">50</option>
+        </select>
       </div>
     </div>
-
-    <div class="ord-end">
-      <span class="ord-total">{{ brl(order.total) }}</span>
-      <span :class="['badge', statusMeta(order.status).tone]">
-        {{ statusMeta(order.status).label }}
-      </span>
-    </div>
-
-    <div class="ord-actions" @click.stop>
-      <select
-        :value="order.status"
-        @change="updateStatus(order.id, ($event.target as HTMLSelectElement).value)"
-      >
-        <option value="pending">Preparando</option>
-        <option value="on_the_way">Chegando</option>
-        <option value="delivered">Entregue</option>
-      </select>
-      <button class="del" @click="deleteOrder(order.id)" title="Deletar pedido">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- LINHA 2: pipeline + itens -->
-  <div class="order-bottom">
-    <div class="ord-pipe">
-      <div class="pipe">
-        <div
-          class="pipe-fill"
-          :style="{ width: (statusMeta(order.status).step / 3) * 100 + '%' }"
-        ></div>
-      </div>
-      <div class="pipe-steps">
-        <span :class="{ done: statusMeta(order.status).step >= 1 }">Preparo</span>
-        <span :class="{ done: statusMeta(order.status).step >= 2 }">Rota</span>
-        <span :class="{ done: statusMeta(order.status).step >= 3 }">Entregue</span>
-      </div>
-    </div>
-
-    <div class="ord-items">
-      <div class="thumbs">
-        <img
-          v-for="item in order.items.slice(0, 4)"
-          :key="item.id"
-          :src="item.product.image"
-          :alt="item.product.name"
-        />
-        <span v-if="order.items.length > 4" class="more">
-          +{{ order.items.length - 4 }}
-        </span>
-      </div>
-      <span class="items-count">
-        {{ order.items.reduce((a, i) => a + i.quantity, 0) }} itens
-      </span>
-    </div>
-  </div>
-</article>
-
 
     <transition name="fade">
       <div v-if="selected" class="modal-wrap" @click.self="selected = null">
@@ -361,10 +443,72 @@ function timeAgo(iso: string) {
               <option value="on_the_way">Chegando</option>
               <option value="delivered">Entregue</option>
             </select>
-            <button class="del big" @click="deleteOrder(selected.id)">
+            <button class="del big" @click="askDelete(selected)">
               Deletar pedido
             </button>
           </footer>
+        </div>
+      </div>
+    </transition>
+
+    <!-- =========================
+         MODAL DE CONFIRMAÇÃO DE EXCLUSÃO
+         (substitui o confirm() do navegador)
+    ========================= -->
+    <transition name="confirm">
+      <div
+        v-if="confirmTarget"
+        class="confirm-wrap"
+        @click.self="cancelDelete"
+      >
+        <div class="confirm-card">
+          <div class="confirm-strip"></div>
+
+          <div class="confirm-icon">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 9h22M12 9V5h8v4M8 9l1.6 17h12.8L24 9"/>
+              <path d="M14 14v8M18 14v8"/>
+            </svg>
+          </div>
+
+          <h3 class="confirm-title">Deletar pedido</h3>
+
+          <p class="confirm-message">
+            Esta ação é <strong>permanente</strong> e não poderá ser desfeita.
+          </p>
+
+          <div class="confirm-meta">
+            <div class="confirm-row">
+              <span class="confirm-label">Pedido</span>
+              <span class="confirm-value mono">{{ shortId(confirmTarget.id) }}</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">Cliente</span>
+              <span class="confirm-value">{{ confirmTarget.user.name }}</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label">Total</span>
+              <span class="confirm-value gold">{{ brl(confirmTarget.total) }}</span>
+            </div>
+          </div>
+
+          <div class="confirm-actions">
+            <button
+              class="confirm-btn ghost"
+              :disabled="deleting"
+              @click="cancelDelete"
+            >
+              Cancelar
+            </button>
+            <button
+              class="confirm-btn danger"
+              :disabled="deleting"
+              @click="confirmDelete"
+            >
+              <span v-if="deleting" class="spinner"></span>
+              <span>{{ deleting ? "Deletando…" : "Sim, deletar" }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </transition>
@@ -389,6 +533,7 @@ function timeAgo(iso: string) {
   --blue:    #5fa8d3;
   --emerald: #4fb286;
   --red:     #c0392b;
+  --red-2:   #e8624a;
   --font-d:  "Cinzel", serif;
   --font-m:  "JetBrains Mono", monospace;
   --font-b:  "Inter", sans-serif;
@@ -472,13 +617,6 @@ function timeAgo(iso: string) {
   padding: 12px 16px; border-radius: 12px; font-family: var(--font-m); font-size: .8rem; cursor: pointer;
 }
 
-.list { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 12px; 
-  position: relative; 
-}
-
 .order {
   display: flex;
   flex-direction: column;
@@ -543,7 +681,6 @@ function timeAgo(iso: string) {
   .chip-row { overflow-x: auto; }
 }
 
-
 .ord-id { display: flex; flex-direction: column; gap: 4px; }
 .ord-code { font-family: var(--font-m); font-size: .85rem; color: var(--gold); font-weight: 600; }
 .ord-code.big { font-size: 1rem; }
@@ -602,12 +739,6 @@ function timeAgo(iso: string) {
 .del svg { width: 16px; height: 16px; }
 .del:hover { background: var(--red); border-color: var(--red); color: white; }
 .del.big { width: auto; padding: 12px 22px; font-family: var(--font-m); font-size: .78rem; letter-spacing: .15em; text-transform: uppercase; }
-
-.empty { display: flex; flex-direction: column; gap: 12px; }
-.skeleton { height: 92px; border-radius: 16px; background: linear-gradient(90deg, var(--panel) 0%, var(--panel-2) 50%, var(--panel) 100%); background-size: 200% 100%; animation: sk 1.4s linear infinite; }
-@keyframes sk { to { background-position: -200% 0; } }
-.empty-card { padding: 60px; text-align: center; border: 1px dashed var(--line-2); border-radius: 16px; }
-.empty-icon { font-size: 3rem; color: var(--gold); display: block; margin-bottom: 12px; }
 
 .modal-wrap {
   position: fixed;
@@ -688,4 +819,240 @@ function timeAgo(iso: string) {
   font-size: .9rem;
 }
 
+/* =========================
+   CONFIRMAÇÃO DE EXCLUSÃO - BOTÕES CORRIGIDOS E SEPARADOS
+========================= */
+.confirm-wrap {
+  position: fixed; inset: 0;
+  z-index: 100000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: rgba(6, 4, 2, 0.78);
+  backdrop-filter: blur(10px);
+}
+.confirm-card {
+  position: relative;
+  width: min(440px, 100%);
+  background: linear-gradient(180deg, #1f1610, #15100a);
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+  padding: 38px 32px 28px;
+  text-align: center;
+  box-shadow:
+    0 1px 0 rgba(255,235,180,0.06) inset,
+    0 30px 80px -20px rgba(0,0,0,0.85),
+    0 0 0 1px rgba(232,98,74,0.08);
+  overflow: hidden;
+}
+.confirm-strip {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--red-2), transparent);
+}
+.confirm-icon {
+  width: 68px; height: 68px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: radial-gradient(circle at 30% 30%, #3a1410, #1a0907);
+  border: 1px solid rgba(232,98,74,0.35);
+  color: var(--red-2);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.04) inset,
+    0 0 32px -6px rgba(232,98,74,0.35);
+}
+.confirm-icon svg { width: 30px; height: 30px; }
+
+.confirm-title {
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: .03em;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+.confirm-message {
+  color: var(--muted);
+  font-size: .95rem;
+  line-height: 1.55;
+  margin: 0 0 22px;
+}
+.confirm-message strong { color: var(--red-2); font-weight: 600; }
+
+.confirm-meta {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+.confirm-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px;
+}
+.confirm-label {
+  font-family: var(--font-m);
+  font-size: .66rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.confirm-value {
+  font-family: var(--font-b);
+  font-size: .92rem;
+  color: var(--text);
+  font-weight: 500;
+  max-width: 60%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.confirm-value.mono { font-family: var(--font-m); color: var(--gold); }
+.confirm-value.gold { color: var(--gold); font-family: var(--font-d); font-weight: 700; font-size: 1rem; }
+
+.confirm-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.confirm-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-width: 170px;
+  padding: 13px 28px;
+  border-radius: 10px;
+  font-family: var(--font-m);
+  font-size: .76rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform .18s ease, filter .2s ease, border-color .2s ease, color .2s ease;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.confirm-btn:disabled { cursor: not-allowed; opacity: .6; }
+.confirm-btn.ghost {
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--line-2);
+}
+.confirm-btn.ghost:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--gold);
+}
+.confirm-btn.danger {
+  background: linear-gradient(180deg, #e8624a, #b8321f 55%, #6b1a10);
+  color: #fff5e8;
+  border-color: #6b1a10;
+  box-shadow: 0 8px 22px -8px rgba(232,98,74,0.55);
+}
+.confirm-btn.danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+.spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid rgba(255,245,232,0.3);
+  border-top-color: currentColor;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.confirm-enter-active, .confirm-leave-active { transition: opacity .22s ease; }
+.confirm-enter-active .confirm-card,
+.confirm-leave-active .confirm-card {
+  transition: transform .25s cubic-bezier(.2,.9,.3,1.2), opacity .22s ease;
+}
+.confirm-enter-from, .confirm-leave-to { opacity: 0; }
+.confirm-enter-from .confirm-card,
+.confirm-leave-to   .confirm-card {
+  transform: translateY(8px) scale(.94);
+  opacity: 0;
+}
+
+/* =========================
+   PAGINAÇÃO
+========================= */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 32px;
+  padding: 16px 24px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-btn {
+  background: transparent;
+  border: 1px solid var(--line-2);
+  color: var(--text);
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-family: var(--font-m);
+  font-size: .78rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.page-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-m);
+  font-size: .9rem;
+  color: var(--muted);
+}
+.page-info .current {
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 1rem;
+}
+.page-info .separator {
+  color: var(--line-2);
+}
+
+.per-page {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-m);
+  font-size: .72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.per-page select {
+  background: var(--bg-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: var(--font-m);
+  font-size: .8rem;
+  cursor: pointer;
+}
 </style>
