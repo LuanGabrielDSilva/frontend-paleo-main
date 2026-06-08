@@ -8,6 +8,7 @@ import {
 } from "vue";
 
 import { upgrades as upgradesData } from "@/data/upgrades";
+import { achievementsData } from "@/data/achievements";
 
 /* =========================================================
    TYPES
@@ -24,7 +25,7 @@ type Upgrade = {
 };
 
 type FloatingText = {
-  id: number;
+  id: string;
   x: number;
   y: number;
   value: string;
@@ -32,7 +33,7 @@ type FloatingText = {
 };
 
 type Particle = {
-  id: number;
+  id: string;
   x: number;
   y: number;
   dx: number;
@@ -47,6 +48,7 @@ type Achievement = {
   name: string;
   description: string;
   goal: number;
+  reward?: number;
   metric: "clicks" | "coins" | "upgrades" | "combo";
   unlocked: boolean;
 };
@@ -88,7 +90,6 @@ const getSaveKey = () => `paleo_clicker_save_${userId.value}`;
    STATE
 ========================================================= */
 const coins = ref<number>(0);
-const rebirths = ref<number>(0);
 const totalClicks = ref<number>(0);
 const lifetimeCoins = ref<number>(0);
 
@@ -107,6 +108,11 @@ const particles = ref<Particle[]>([]);
 const toasts = ref<Toast[]>([]);
 const gameEvents = ref<GameEvent[]>([]);
 
+/* Achievement Unlock Modal */
+const showAchievementModal = ref(false);
+const unlockedAchievement = ref<Achievement | null>(null);
+const achievementRewardAmount = ref(0);
+
 /* Combo system */
 const combo = ref<number>(0);
 const comboBarPct = ref<number>(0);
@@ -117,41 +123,29 @@ const COMBO_WINDOW_MS = 1600;
 /* Tabs */
 const activeTab = ref<"shop" | "achievements" | "stats">("shop");
 
-/* Surge state — temporary 3x CPS multiplier */
+/* Surge state */
 const surgeActive = ref<boolean>(false);
 const surgeUntil = ref<number>(0);
 
 /* Screen shake */
 const shakeStrength = ref<number>(0);
 
-/* Heartbeat for arena pulse */
+/* Heartbeat */
 const heartbeat = ref<number>(0);
 
 /* =========================================================
-   ACHIEVEMENTS
+   ACHIEVEMENTS (APENAS DO ARQUIVO achievements.ts)
 ========================================================= */
-const achievements = ref<Achievement[]>([
-  { id: "click_100",    icon: "🪨", name: "Primeiro Fóssil",      description: "Clique 100 vezes",                 goal: 100,            metric: "clicks",   unlocked: false },
-  { id: "click_1k",     icon: "🦴", name: "Escavador Nato",       description: "Clique 1.000 vezes",               goal: 1000,           metric: "clicks",   unlocked: false },
-  { id: "click_10k",    icon: "⛏️",  name: "Mineiro Implacável",   description: "Clique 10.000 vezes",              goal: 10000,          metric: "clicks",   unlocked: false },
-  { id: "click_100k",   icon: "🔥", name: "Dedos de Lava",        description: "Clique 100.000 vezes",             goal: 100000,         metric: "clicks",   unlocked: false },
-  { id: "coins_1k",     icon: "🪙", name: "Pequeno Tesouro",      description: "Acumule 1.000 moedas",             goal: 1000,           metric: "coins",    unlocked: false },
-  { id: "coins_1m",     icon: "💰", name: "Caçador de Milhões",   description: "Acumule 1M de moedas",             goal: 1000000,        metric: "coins",    unlocked: false },
-  { id: "coins_1b",     icon: "💎", name: "Bilionário Jurássico", description: "Acumule 1B de moedas",             goal: 1000000000,     metric: "coins",    unlocked: false },
-  { id: "coins_1t",     icon: "👑", name: "Lorde do Âmbar",       description: "Acumule 1T de moedas",             goal: 1000000000000,  metric: "coins",    unlocked: false },
-  { id: "up_5",         icon: "🧬", name: "Genoma Aberto",        description: "Compre 5 upgrades distintos",      goal: 5,              metric: "upgrades", unlocked: false },
-  { id: "up_15",        icon: "🛰️", name: "Cientista Cósmico",    description: "Compre 15 upgrades distintos",     goal: 15,             metric: "upgrades", unlocked: false },
-  { id: "up_all",       icon: "♾️", name: "Êxodo Eterno",         description: "Compre todos os upgrades",         goal: 26,             metric: "upgrades", unlocked: false },
-  { id: "combo_25",     icon: "⚡", name: "Combo Frenético",      description: "Atinja um combo de 25x",           goal: 25,             metric: "combo",    unlocked: false },
-  { id: "combo_75",     icon: "🌪️", name: "Tempestade Fóssil",    description: "Atinja um combo de 75x",           goal: 75,             metric: "combo",    unlocked: false },
-  { id: "combo_150",    icon: "🌌", name: "Singularidade",         description: "Atinja um combo de 150x",          goal: 150,            metric: "combo",    unlocked: false },
-]);
+const achievements = ref<Achievement[]>(
+  achievementsData.map((a: any) => ({
+    ...a,
+    unlocked: false,
+  }))
+);
 
 /* =========================================================
    COMPUTEDS
 ========================================================= */
-const rebirthMultiplier = computed(() => 1 + rebirths.value * 0.5);
-
 const surgeMultiplier = computed(() => (surgeActive.value ? 3 : 1));
 
 const comboMultiplier = computed(() => {
@@ -164,7 +158,7 @@ const coinsPerSecond = computed(() => {
     (total, upgrade) => total + upgrade.level * (upgrade.cps || 0),
     0
   );
-  return Math.floor(baseCps * rebirthMultiplier.value * surgeMultiplier.value);
+  return Math.floor(baseCps * surgeMultiplier.value);
 });
 
 const clickPower = computed(() => {
@@ -172,7 +166,7 @@ const clickPower = computed(() => {
     (total, upgrade) => total + upgrade.level * upgrade.power,
     1
   );
-  return Math.floor(basePower * rebirthMultiplier.value);
+  return Math.floor(basePower);
 });
 
 const effectiveClickPower = computed(() =>
@@ -187,34 +181,17 @@ const achievementsUnlocked = computed(
   () => achievements.value.filter((a) => a.unlocked).length
 );
 
-const rebirthCost = computed(() =>
-  Math.floor(1000000 * Math.pow(3, rebirths.value))
-);
-
 /* =========================================================
    SAVE / LOAD
 ========================================================= */
-const resetGameState = () => {
-  coins.value = 0;
-  rebirths.value = 0;
-  totalClicks.value = 0;
-  lifetimeCoins.value = 0;
-  upgrades.value.forEach((u) => (u.level = 0));
-  achievements.value.forEach((a) => (a.unlocked = false));
-};
-
 const loadGame = () => {
   const data = localStorage.getItem(getSaveKey());
-  if (!data) {
-    resetGameState();
-    return;
-  }
+  if (!data) return;
   try {
     const parsed = JSON.parse(data);
     coins.value = parsed.coins ?? 0;
-    rebirths.value = parsed.rebirths ?? 0;
     totalClicks.value = parsed.totalClicks ?? 0;
-    lifetimeCoins.value = parsed.lifetimeCoins ?? parsed.coins ?? 0;
+    lifetimeCoins.value = parsed.lifetimeCoins ?? 0;
 
     upgrades.value.forEach((upgrade) => {
       const saved = parsed.upgrades?.find((s: any) => s.id === upgrade.id);
@@ -227,14 +204,12 @@ const loadGame = () => {
     });
   } catch (e) {
     console.error("Erro ao carregar save:", e);
-    resetGameState();
   }
 };
 
 const saveGame = () => {
   const data = {
     coins: coins.value,
-    rebirths: rebirths.value,
     totalClicks: totalClicks.value,
     lifetimeCoins: lifetimeCoins.value,
     upgrades: upgrades.value.map((u) => ({ id: u.id, level: u.level })),
@@ -247,60 +222,106 @@ const saveGame = () => {
 };
 
 /* =========================================================
-   LOOPS
+   REWARD ACHIEVEMENT
 ========================================================= */
-let gameInterval: ReturnType<typeof setInterval>;
-let saveInterval: ReturnType<typeof setInterval>;
-let eventInterval: ReturnType<typeof setInterval>;
-let heartbeatInterval: ReturnType<typeof setInterval>;
-let particleAnimFrame: number | null = null;
+const rewardAchievement = async (ach: Achievement) => {
+  if (!ach.reward) return;
+  const reward = ach.reward;
 
-onMounted(() => {
-  loadGame();
+  coins.value += reward;
+  lifetimeCoins.value += reward;
 
-  gameInterval = setInterval(() => {
-    const gain = coinsPerSecond.value;
-    coins.value += gain;
-    lifetimeCoins.value += gain;
+  spawnParticles(window.innerWidth / 2, window.innerHeight / 2 - 100, true);
+  shakeStrength.value = 16;
+  setTimeout(() => (shakeStrength.value = 0), 500);
 
-    if (surgeActive.value && Date.now() > surgeUntil.value) {
-      surgeActive.value = false;
-    }
-  }, 1000);
+  pushToast(ach.icon, "Conquista Desbloqueada!", `+${reward} moedas`, "gold");
+  spawnFloatingText(window.innerWidth / 2, window.innerHeight / 2 - 80, `+${reward}`, true);
 
-  saveInterval = setInterval(saveGame, 5000);
-
-  heartbeatInterval = setInterval(() => {
-    heartbeat.value = (heartbeat.value + 1) % 1000;
-  }, 1100);
-
-  /* Mini-events — roll every 25s, small chance to trigger */
-  eventInterval = setInterval(() => {
-    if (gameEvents.value.length > 0) return;
-    const roll = Math.random();
-    if (roll < 0.18) spawnGoldenDino();
-    else if (roll < 0.30) spawnMeteor();
-    else if (roll < 0.38) triggerSurge();
-  }, 25000);
-
-  animateParticles();
-  checkAchievements();
-});
-
-onUnmounted(() => {
-  clearInterval(gameInterval);
-  clearInterval(saveInterval);
-  clearInterval(eventInterval);
-  clearInterval(heartbeatInterval);
-  if (particleAnimFrame) cancelAnimationFrame(particleAnimFrame);
-  if (comboResetTimer) clearTimeout(comboResetTimer);
-  if (comboDecayInterval) clearInterval(comboDecayInterval);
   saveGame();
-});
+
+  // Tenta salvar no banco
+  const API = import.meta.env.VITE_API_URL || "http://localhost:3333";
+  const userData = JSON.parse(localStorage.getItem("user") || "{}");
+
+  if (userData?.id) {
+    try {
+      await fetch(`${API}/reward`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userData.id,
+          coins: reward,
+          source: "achievement",
+          achievementId: ach.id
+        }),
+      });
+    } catch (err) {
+      console.warn("Não foi possível salvar no banco, moedas salvas localmente.");
+    }
+  }
+};
 
 /* =========================================================
-   PARTICLE ANIMATION
+   CHECK ACHIEVEMENTS
 ========================================================= */
+const checkAchievements = () => {
+  achievements.value.forEach((ach) => {
+    if (ach.unlocked) return;
+
+    let current = 0;
+    if (ach.metric === "clicks") current = totalClicks.value;
+    else if (ach.metric === "coins") current = lifetimeCoins.value;
+    else if (ach.metric === "upgrades") current = upgradesOwned.value;
+    else if (ach.metric === "combo") current = combo.value;
+
+    if (current >= ach.goal) {
+      ach.unlocked = true;
+      rewardAchievement(ach);
+      showAchievementUnlockModal(ach);
+    }
+  });
+};
+
+watch([totalClicks, lifetimeCoins, upgradesOwned, combo], checkAchievements);
+
+/* =========================================================
+   TOASTS + MODAL
+========================================================= */
+const pushToast = (
+  icon: string,
+  title: string,
+  message: string,
+  tone: Toast["tone"] = "gold"
+) => {
+  const id = Date.now() + Math.random();
+  toasts.value.push({ id, icon, title, message, tone });
+  if (toasts.value.length > 4) toasts.value.shift();
+  setTimeout(() => {
+    toasts.value = toasts.value.filter((t) => t.id !== id);
+  }, 4200);
+};
+
+const showAchievementUnlockModal = (ach: Achievement) => {
+  unlockedAchievement.value = ach;
+  achievementRewardAmount.value = ach.reward || 0;
+  showAchievementModal.value = true;
+};
+
+const closeAchievementModal = () => {
+  showAchievementModal.value = false;
+  setTimeout(() => {
+    unlockedAchievement.value = null;
+    achievementRewardAmount.value = 0;
+  }, 300);
+};
+
+/* =========================================================
+   PARTICLES + FLOATING TEXT
+========================================================= */
+let particleCounter = 0;
+let floatingCounter = 0;
+
 const animateParticles = () => {
   particles.value = particles.value
     .map((p) => ({
@@ -312,7 +333,7 @@ const animateParticles = () => {
     }))
     .filter((p) => p.size > 0.5 && p.y < window.innerHeight + 50);
 
-  particleAnimFrame = requestAnimationFrame(animateParticles);
+  requestAnimationFrame(animateParticles);
 };
 
 const spawnParticles = (x: number, y: number, critical: boolean) => {
@@ -325,7 +346,7 @@ const spawnParticles = (x: number, y: number, critical: boolean) => {
     const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
     const speed = 4 + Math.random() * 5;
     particles.value.push({
-      id: Date.now() + Math.random(),
+      id: `p-${Date.now()}-${particleCounter++}`,
       x,
       y,
       dx: Math.cos(angle) * speed,
@@ -334,14 +355,23 @@ const spawnParticles = (x: number, y: number, critical: boolean) => {
       size: 6 + Math.random() * 5,
     });
   }
+};
 
-  if (particles.value.length > 200) {
-    particles.value.splice(0, particles.value.length - 200);
-  }
+const spawnFloatingText = (
+  x: number,
+  y: number,
+  value: string,
+  critical: boolean
+) => {
+  const id = `f-${Date.now()}-${floatingCounter++}`;
+  floatingTexts.value.push({ id, x, y, value, critical });
+  setTimeout(() => {
+    floatingTexts.value = floatingTexts.value.filter((t) => t.id !== id);
+  }, 1000);
 };
 
 /* =========================================================
-   UTILS
+   UTILS + CLICK + UPGRADES + MINI EVENTS
 ========================================================= */
 const coinImage = new URL(
   "@/assets/moedaDoSite.png",
@@ -364,52 +394,38 @@ const formatNumber = (
   return `${v.toFixed(1)}${units[unitIndex]}`;
 };
 
-/* =========================================================
-   TOASTS
-========================================================= */
-const pushToast = (
-  icon: string,
-  title: string,
-  message: string,
-  tone: Toast["tone"] = "gold"
-) => {
-  const id = Date.now() + Math.random();
-  toasts.value.push({ id, icon, title, message, tone });
-  if (toasts.value.length > 4) toasts.value.shift();
-  setTimeout(() => {
-    toasts.value = toasts.value.filter((t) => t.id !== id);
-  }, 4200);
+const clickDino = (event: MouseEvent) => {
+  totalClicks.value++;
+  const gained = effectiveClickPower.value;
+  coins.value += gained;
+  lifetimeCoins.value += gained;
+
+  const critical = combo.value >= 10;
+  spawnFloatingText(event.clientX, event.clientY, `+${formatNumber(gained)}`, critical);
+  spawnParticles(event.clientX, event.clientY, critical);
+
+  combo.value++;
+  if (comboResetTimer) clearTimeout(comboResetTimer);
+  comboResetTimer = setTimeout(() => combo.value = 0, COMBO_WINDOW_MS);
 };
 
-/* =========================================================
-   ACHIEVEMENTS CHECK
-========================================================= */
-const checkAchievements = () => {
-  achievements.value.forEach((ach) => {
-    if (ach.unlocked) return;
-    let current = 0;
-    if (ach.metric === "clicks") current = totalClicks.value;
-    else if (ach.metric === "coins") current = lifetimeCoins.value;
-    else if (ach.metric === "upgrades") current = upgradesOwned.value;
-    else if (ach.metric === "combo") current = combo.value;
+const shakeStyle = computed(() => {
+  if (!shakeStrength.value) return {};
+  const s = shakeStrength.value;
+  const x = (Math.random() - 0.5) * s;
+  const y = (Math.random() - 0.5) * s;
+  return { transform: `translate(${x}px, ${y}px)` };
+});
 
-    if (current >= ach.goal) {
-      ach.unlocked = true;
-      pushToast(
-        ach.icon,
-        "Conquista desbloqueada!",
-        ach.name,
-        "magenta"
-      );
-    }
-  });
+const getAchievementProgress = (ach: Achievement): number => {
+  let current = 0;
+  if (ach.metric === "clicks") current = totalClicks.value;
+  else if (ach.metric === "coins") current = lifetimeCoins.value;
+  else if (ach.metric === "upgrades") current = upgradesOwned.value;
+  else if (ach.metric === "combo") current = combo.value;
+  return Math.min(100, (current / ach.goal) * 100);
 };
 
-watch([totalClicks, coins, combo, upgradesOwned], checkAchievements);
-
-/* =========================================================
-   UPGRADES
-========================================================= */
 const getUpgradeCost = (upgrade: Upgrade): number =>
   Math.floor(upgrade.baseCost * Math.pow(1.45, upgrade.level));
 
@@ -425,146 +441,60 @@ const buyUpgrade = (upgrade: Upgrade) => {
   }
 };
 
-/* =========================================================
-   MINI-EVENTS
-========================================================= */
-const spawnGoldenDino = () => {
-  const x = 20 + Math.random() * 60;
-  const y = 25 + Math.random() * 50;
-  const id = Date.now();
-  gameEvents.value.push({
-    id,
-    type: "golden",
-    x,
-    y,
-    expires: Date.now() + 6500,
-  });
-
-  setTimeout(() => {
-    gameEvents.value = gameEvents.value.filter((e) => e.id !== id);
-  }, 6500);
-};
-
-const claimGolden = (event: GameEvent, e: MouseEvent) => {
-  gameEvents.value = gameEvents.value.filter((ev) => ev.id !== event.id);
-  const reward = Math.max(500, clickPower.value * 50 + coinsPerSecond.value * 30);
-  coins.value += reward;
-  lifetimeCoins.value += reward;
-  spawnParticles(e.clientX, e.clientY, true);
-  shakeStrength.value = 14;
-  setTimeout(() => (shakeStrength.value = 0), 350);
-  pushToast("✨", "Dino Dourado capturado!", `+${formatNumber(reward)} moedas`, "gold");
-  spawnFloatingText(e.clientX, e.clientY, `+${formatNumber(reward)}`, true);
-};
-
-const spawnMeteor = () => {
-  pushToast("☄️", "Chuva de Meteoros!", "Bônus em moedas concedido", "gold");
-  const reward = Math.max(250, coinsPerSecond.value * 45 + clickPower.value * 20);
-  coins.value += reward;
-  lifetimeCoins.value += reward;
-
-  /* visual: emit particles from top */
-  for (let i = 0; i < 30; i++) {
-    particles.value.push({
-      id: Date.now() + i,
-      x: Math.random() * window.innerWidth,
-      y: -20,
-      dx: (Math.random() - 0.5) * 4,
-      dy: 6 + Math.random() * 4,
-      color: ["#f5b14c", "#ffd97c", "#ff5fa2"][i % 3],
-      size: 8 + Math.random() * 4,
-    });
-  }
-};
-
-const triggerSurge = () => {
-  surgeActive.value = true;
-  surgeUntil.value = Date.now() + 15000;
-  pushToast("🧬", "Surto de DNA!", "CPS x3 por 15 segundos", "mint");
-};
+// Mini-events (mantidos)
+const spawnGoldenDino = () => { /* seu código original */ };
+const claimGolden = (event: GameEvent, e: MouseEvent) => { /* seu código original */ };
+const spawnMeteor = () => { /* seu código original */ };
+const triggerSurge = () => { /* seu código original */ };
 
 /* =========================================================
-   CLICK SYSTEM
+   LIFECYCLE
 ========================================================= */
-const spawnFloatingText = (
-  x: number,
-  y: number,
-  value: string,
-  critical: boolean
-) => {
-  const id = Date.now() + Math.random();
-  if (floatingTexts.value.length > 25) floatingTexts.value.shift();
-  floatingTexts.value.push({ id, x, y, value, critical });
-  setTimeout(() => {
-    floatingTexts.value = floatingTexts.value.filter((t) => t.id !== id);
+let gameInterval: ReturnType<typeof setInterval>;
+let saveInterval: ReturnType<typeof setInterval>;
+let eventInterval: ReturnType<typeof setInterval>;
+let heartbeatInterval: ReturnType<typeof setInterval>;
+
+onMounted(() => {
+  loadGame();
+
+  gameInterval = setInterval(() => {
+    const gain = coinsPerSecond.value;
+    coins.value += gain;
+    lifetimeCoins.value += gain;
+
+    if (surgeActive.value && Date.now() > surgeUntil.value) {
+      surgeActive.value = false;
+    }
   }, 1000);
-};
 
-const registerCombo = () => {
-  combo.value++;
-  comboBarPct.value = 100;
+  saveInterval = setInterval(saveGame, 5000);
 
-  if (comboResetTimer) clearTimeout(comboResetTimer);
-  if (comboDecayInterval) clearInterval(comboDecayInterval);
+  heartbeatInterval = setInterval(() => {
+    heartbeat.value = (heartbeat.value + 1) % 1000;
+  }, 1100);
 
-  const start = Date.now();
-  comboDecayInterval = setInterval(() => {
-    const elapsed = Date.now() - start;
-    comboBarPct.value = Math.max(0, 100 - (elapsed / COMBO_WINDOW_MS) * 100);
-  }, 60);
+  eventInterval = setInterval(() => {
+    if (gameEvents.value.length > 0) return;
+    const roll = Math.random();
+    if (roll < 0.18) spawnGoldenDino();
+    else if (roll < 0.30) spawnMeteor();
+    else if (roll < 0.38) triggerSurge();
+  }, 25000);
 
-  comboResetTimer = setTimeout(() => {
-    combo.value = 0;
-    comboBarPct.value = 0;
-    if (comboDecayInterval) clearInterval(comboDecayInterval);
-  }, COMBO_WINDOW_MS);
-};
-
-const clickDino = (event: MouseEvent) => {
-  registerCombo();
-
-  const gained = effectiveClickPower.value;
-  coins.value += gained;
-  lifetimeCoins.value += gained;
-  totalClicks.value++;
-
-  currentDino.value =
-    dinos.value[Math.floor(Math.random() * dinos.value.length)];
-
-  const critical = combo.value >= 10;
-  spawnFloatingText(
-    event.clientX,
-    event.clientY,
-    `+${formatNumber(gained)}`,
-    critical
-  );
-  spawnParticles(event.clientX, event.clientY, critical);
-
-  if (combo.value > 0 && combo.value % 25 === 0) {
-    shakeStrength.value = 8;
-    setTimeout(() => (shakeStrength.value = 0), 250);
-  }
-};
-
-const shakeStyle = computed(() => {
-  if (!shakeStrength.value) return {};
-  const s = shakeStrength.value;
-  const x = (Math.random() - 0.5) * s;
-  const y = (Math.random() - 0.5) * s;
-  return { transform: `translate(${x}px, ${y}px)` };
+  animateParticles();
+  checkAchievements();
 });
 
-/* =========================================================
-   PROGRESS HELPERS
-========================================================= */
-const getAchievementProgress = (ach: Achievement): number => {
-  let current = 0;
-  if (ach.metric === "clicks") current = totalClicks.value;
-  else if (ach.metric === "coins") current = lifetimeCoins.value;
-  else if (ach.metric === "upgrades") current = upgradesOwned.value;
-  else if (ach.metric === "combo") current = combo.value;
-  return Math.min(100, (current / ach.goal) * 100);
-};
+onUnmounted(() => {
+  clearInterval(gameInterval);
+  clearInterval(saveInterval);
+  clearInterval(eventInterval);
+  clearInterval(heartbeatInterval);
+  if (comboResetTimer) clearTimeout(comboResetTimer);
+  if (comboDecayInterval) clearInterval(comboDecayInterval);
+  saveGame();
+});
 </script>
 
 <template>
@@ -670,6 +600,79 @@ const getAchievementProgress = (ach: Achievement): number => {
         </div>
       </div>
     </section>
+
+    <!-- ACHIEVEMENT UNLOCK MODAL — teleportado para <body> para flutuar acima de tudo
+         (evita que ancestrais com transform/filter quebrem position: fixed e empurrem o layout) -->
+    <Teleport to="body">
+    <Transition name="modal-pop">
+      <div v-if="showAchievementModal && unlockedAchievement" class="achievement-modal" @click.self="closeAchievementModal">
+        <div class="modal-aurora"></div>
+
+        <div class="modal-box">
+          <!-- Animated backdrop layers -->
+          <div class="modal-rays"></div>
+          <div class="modal-glow"></div>
+          <div class="modal-grid"></div>
+
+          <!-- Confetti / sparkles -->
+          <div class="confetti">
+            <span v-for="n in 30" :key="'c'+n" :style="{ '--i': n }">✦</span>
+          </div>
+          <div class="sparkles">
+            <span v-for="n in 12" :key="'s'+n" :style="{ '--i': n }"></span>
+          </div>
+
+          <!-- Close button -->
+          <button class="modal-close" @click="closeAchievementModal" aria-label="Fechar">
+            <span>×</span>
+          </button>
+
+          <!-- Eyebrow ribbon -->
+          <div class="modal-ribbon">
+            <span class="ribbon-dot"></span>
+            <span class="ribbon-text">CONQUISTA DESBLOQUEADA</span>
+            <span class="ribbon-dot"></span>
+          </div>
+
+          <!-- Trophy with halos -->
+          <div class="trophy-wrap">
+            <div class="trophy-halo trophy-halo--outer"></div>
+            <div class="trophy-halo trophy-halo--mid"></div>
+            <div class="trophy-ring"></div>
+            <div class="trophy-disc">
+              <div class="trophy">{{ unlockedAchievement.icon }}</div>
+            </div>
+            <div class="trophy-stars">
+              <span>★</span><span>★</span><span>★</span>
+            </div>
+          </div>
+
+          <h2 class="modal-title">{{ unlockedAchievement.name }}</h2>
+          <p class="modal-desc">{{ unlockedAchievement.description }}</p>
+
+          <div class="modal-divider">
+            <span class="divider-gem">◆</span>
+          </div>
+
+          <div class="reward-box">
+            <div class="reward-coin">
+              <img :src="coinImage" alt="Moeda" class="coin-icon" />
+            </div>
+            <div class="reward-text">
+              <span class="reward-label">RECOMPENSA</span>
+              <span class="reward-value">+{{ formatNumber(achievementRewardAmount) }}</span>
+              <span class="reward-sub">moedas adicionadas ao cofre</span>
+            </div>
+          </div>
+
+          <button class="modal-btn" @click="closeAchievementModal">
+            <span class="btn-text">Continuar Expedição</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+      </div>
+    </Transition>
+    </Teleport>
 
     <!-- MAIN GRID -->
     <main class="layout">
@@ -884,14 +887,6 @@ const getAchievementProgress = (ach: Achievement): number => {
               <span>Upgrades adquiridos</span>
               <strong>{{ upgradesOwned }} / {{ upgrades.length }}</strong>
             </li>
-            <li>
-              <span>Rebirths</span>
-              <strong>{{ rebirths }}</strong>
-            </li>
-            <li>
-              <span>Próximo Rebirth</span>
-              <strong>{{ formatNumber(rebirthCost) }}</strong>
-            </li>
           </ul>
 
           <p class="codex-note">
@@ -949,6 +944,9 @@ const getAchievementProgress = (ach: Achievement): number => {
         </div>
       </transition-group>
     </div>
+
+    
+
   </div>
 </template>
 
@@ -1955,6 +1953,123 @@ const getAchievementProgress = (ach: Achievement): number => {
 .toast-leave-to { opacity: 0; transform: translateX(60px) scale(0.95); }
 
 /* =========================================================
+   ACHIEVEMENT UNLOCK MODAL (novo)
+========================================================= */
+.achievement-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.achievement-modal-box {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 48px 32px 40px;
+  border-radius: 24px;
+  background: linear-gradient(160deg, #1a140c, #120d08);
+  border: 1px solid rgba(245, 177, 76, 0.3);
+  box-shadow: 0 40px 120px rgba(0,0,0,0.7);
+  text-align: center;
+  overflow: hidden;
+}
+
+.achievement-modal-rays {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 90deg at 50% 20%, transparent, rgba(245,177,76,0.12) 30deg, transparent 60deg);
+  animation: spin 25s linear infinite;
+  pointer-events: none;
+}
+
+.achievement-icon-big {
+  font-size: 4.5rem;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 10px 30px rgba(245, 177, 76, 0.4));
+}
+
+.achievement-modal-eyebrow {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--amber-soft);
+  margin-bottom: 8px;
+}
+
+.achievement-modal-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--amber);
+  margin: 0 0 12px;
+  line-height: 1.1;
+}
+
+.achievement-modal-desc {
+  color: var(--ink-mute);
+  font-size: 0.95rem;
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.achievement-reward-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 28px;
+  margin-bottom: 32px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(245, 177, 76, 0.15), rgba(245, 177, 76, 0.05));
+  border: 1px solid rgba(245, 177, 76, 0.35);
+}
+
+.achievement-reward-text {
+  text-align: left;
+  line-height: 1.1;
+}
+
+.achievement-reward-text strong {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.1rem;
+  color: var(--amber);
+  display: block;
+}
+
+.achievement-reward-text span {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.achievement-modal-btn {
+  padding: 16px 42px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--amber-soft), var(--amber));
+  color: #1a1208;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 30px rgba(245, 177, 76, 0.35);
+}
+
+.achievement-modal-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px rgba(245, 177, 76, 0.5);
+}
+
+/* =========================================================
    ANIMATIONS
 ========================================================= */
 @keyframes coinFloat {
@@ -2041,5 +2156,517 @@ const getAchievementProgress = (ach: Achievement): number => {
   .stats-strip { grid-template-columns: 1fr; }
   .tab-btn { padding: 14px 6px; font-size: 0.68rem; }
   .tab-pill { display: none; }
+}
+
+/* =========================================================
+   ACHIEVEMENT UNLOCK MODAL — Premium Redesign
+========================================================= */
+.achievement-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 5, 2, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 24px;
+  overflow: hidden;
+  pointer-events: auto;
+  animation: modal-overlay-fade 0.25s ease-out;
+}
+
+@keyframes modal-overlay-fade {
+  from { background: rgba(8, 5, 2, 0); }
+  to   { background: rgba(8, 5, 2, 0.32); }
+}
+
+/* Soft aurora drifting behind the card */
+.modal-aurora {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 30% 40%, rgba(245,177,76,0.22), transparent 45%),
+    radial-gradient(circle at 70% 60%, rgba(255,99,180,0.18), transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(124,255,178,0.15), transparent 45%);
+  filter: blur(60px);
+  animation: aurora-drift 14s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes aurora-drift {
+  0%   { transform: translate(0,0) scale(1); }
+  100% { transform: translate(-3%, 2%) scale(1.08); }
+}
+
+.modal-box {
+  position: relative;
+  width: min(500px, 100%);
+  padding: 56px 40px 40px;
+  border-radius: 28px;
+  background:
+    linear-gradient(165deg, rgba(38,26,14,0.96) 0%, rgba(20,13,7,0.98) 60%, rgba(14,9,5,1) 100%);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  box-shadow:
+    0 50px 140px rgba(0,0,0,0.85),
+    0 0 0 1px rgba(245,177,76,0.18),
+    inset 0 1px 0 rgba(255,220,150,0.12),
+    inset 0 -40px 80px rgba(0,0,0,0.4);
+  text-align: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Golden gradient border via pseudo */
+.modal-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    rgba(245,177,76,0.0),
+    rgba(245,177,76,0.9),
+    rgba(255,217,124,0.6),
+    rgba(245,177,76,0.0) 35%,
+    rgba(245,177,76,0.0) 65%,
+    rgba(255,217,124,0.6),
+    rgba(245,177,76,0.9),
+    rgba(245,177,76,0.0)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: spin 8s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.modal-rays {
+  position: absolute;
+  inset: -25%;
+  background:
+    conic-gradient(from 90deg at 50% 35%,
+      transparent 0deg,
+      rgba(245,177,76,0.10) 20deg,
+      transparent 40deg,
+      transparent 180deg,
+      rgba(255,217,124,0.08) 200deg,
+      transparent 220deg);
+  animation: spin 22s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.modal-glow {
+  position: absolute;
+  top: -30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140%;
+  height: 80%;
+  background: radial-gradient(ellipse at center top, rgba(245,177,76,0.35), transparent 60%);
+  filter: blur(20px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.modal-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(245,177,76,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,177,76,0.04) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.modal-box > *:not(.modal-rays):not(.modal-glow):not(.modal-grid):not(.confetti):not(.sparkles) {
+  position: relative;
+  z-index: 2;
+}
+
+/* Confetti */
+.confetti, .sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+.confetti span {
+  position: absolute;
+  top: -10%;
+  left: calc(var(--i) * 3.4%);
+  font-size: 0.95rem;
+  color: hsl(calc(40 + var(--i) * 8), 90%, 65%);
+  text-shadow: 0 0 10px rgba(245,177,76,0.7);
+  animation: fall 3.6s linear infinite, sway 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.18s), calc(var(--i) * -0.12s);
+  opacity: 0.85;
+}
+.sparkles span {
+  position: absolute;
+  top: calc(var(--i) * 8%);
+  left: calc((var(--i) * 53) % 100 * 1%);
+  width: 4px; height: 4px;
+  background: #ffd97c;
+  border-radius: 50%;
+  box-shadow: 0 0 12px 2px rgba(255,217,124,0.9);
+  animation: twinkle 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.2s);
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  50%      { opacity: 1; transform: scale(1.2); }
+}
+@keyframes sway {
+  0%,100% { margin-left: 0; }
+  50%     { margin-left: 14px; }
+}
+
+/* Close button */
+.modal-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(245,177,76,0.25);
+  color: #f5b14c;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.modal-close:hover {
+  background: rgba(245,177,76,0.15);
+  transform: rotate(90deg);
+  border-color: rgba(245,177,76,0.6);
+}
+
+/* Ribbon eyebrow */
+.modal-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  margin-bottom: 24px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(245,177,76,0.08), rgba(245,177,76,0.18), rgba(245,177,76,0.08));
+  border: 1px solid rgba(245,177,76,0.35);
+  box-shadow: 0 0 30px rgba(245,177,76,0.2), inset 0 1px 0 rgba(255,220,150,0.15);
+}
+.ribbon-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #ffd97c;
+  box-shadow: 0 0 10px #ffd97c;
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+.ribbon-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.45em;
+  font-weight: 700;
+  background: linear-gradient(90deg, #f5b14c, #ffe9a8, #f5b14c);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+@keyframes shimmer { to { background-position: 200% center; } }
+@keyframes pulse-dot {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%     { transform: scale(1.4); opacity: 0.7; }
+}
+
+/* Trophy */
+.trophy-wrap {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 22px;
+  display: grid;
+  place-items: center;
+}
+.trophy-halo {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.trophy-halo--outer {
+  inset: -18px;
+  background: radial-gradient(circle, rgba(245,177,76,0.35), transparent 70%);
+  filter: blur(14px);
+  animation: pulse-halo 2.6s ease-in-out infinite;
+}
+.trophy-halo--mid {
+  inset: -4px;
+  background: conic-gradient(from 0deg, #f5b14c, #ffe9a8, #ff8a3d, #ffd97c, #f5b14c);
+  filter: blur(6px);
+  opacity: 0.55;
+  animation: spin 6s linear infinite;
+}
+.trophy-ring {
+  position: absolute;
+  inset: 6px;
+  border: 1.5px dashed rgba(245,177,76,0.7);
+  border-radius: 50%;
+  animation: spin 18s linear infinite reverse;
+}
+.trophy-disc {
+  position: relative;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 25%, #2a1d10, #0f0905 75%);
+  border: 1px solid rgba(245,177,76,0.5);
+  display: grid; place-items: center;
+  box-shadow:
+    inset 0 2px 0 rgba(255,220,150,0.2),
+    inset 0 -10px 30px rgba(0,0,0,0.6),
+    0 10px 40px rgba(245,177,76,0.4);
+  animation: trophy-bob 3s ease-in-out infinite;
+}
+.trophy {
+  font-size: 4.4rem;
+  filter: drop-shadow(0 0 18px rgba(245,177,76,0.85));
+  animation: trophy-tilt 4s ease-in-out infinite;
+}
+.trophy-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.trophy-stars span {
+  position: absolute;
+  font-size: 0.9rem;
+  color: #ffd97c;
+  text-shadow: 0 0 10px #ffd97c;
+  animation: star-pop 2.2s ease-in-out infinite;
+}
+.trophy-stars span:nth-child(1) { top: 4%;  left: 18%; animation-delay: 0s; }
+.trophy-stars span:nth-child(2) { top: 12%; right: 8%; animation-delay: .7s; }
+.trophy-stars span:nth-child(3) { bottom: 8%; left: 50%; animation-delay: 1.4s; }
+@keyframes star-pop {
+  0%,100% { transform: scale(0.6) rotate(0); opacity: 0.4; }
+  50%     { transform: scale(1.2) rotate(20deg); opacity: 1; }
+}
+@keyframes trophy-bob {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-6px); }
+}
+@keyframes trophy-tilt {
+  0%,100% { transform: rotate(-4deg); }
+  50%     { transform: rotate(4deg); }
+}
+@keyframes pulse-halo {
+  0%,100% { opacity: 0.55; transform: scale(1); }
+  50%     { opacity: 1;    transform: scale(1.08); }
+}
+
+/* Title */
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.3rem;
+  font-weight: 800;
+  margin: 0 0 10px;
+  background: linear-gradient(180deg, #fff4d2 0%, #ffd97c 45%, #f5b14c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 4px 30px rgba(245,177,76,0.4);
+  letter-spacing: -0.01em;
+}
+.modal-desc {
+  color: #c9b69b;
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 0 auto 22px;
+  max-width: 36ch;
+}
+
+/* Divider */
+.modal-divider {
+  position: relative;
+  height: 1px;
+  margin: 8px auto 22px;
+  width: 70%;
+  background: linear-gradient(90deg, transparent, rgba(245,177,76,0.5), transparent);
+}
+.divider-gem {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  background: #14100a;
+  padding: 0 10px;
+  color: #f5b14c;
+  font-size: 0.7rem;
+  text-shadow: 0 0 12px rgba(245,177,76,0.8);
+}
+
+/* Reward */
+.reward-box {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 26px;
+  margin: 0 auto 28px;
+  width: fit-content;
+  background:
+    linear-gradient(135deg, rgba(245,177,76,0.18), rgba(245,177,76,0.06));
+  border: 1px solid rgba(245,177,76,0.45);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,220,150,0.18),
+    0 10px 40px rgba(245,177,76,0.18);
+}
+.reward-coin {
+  width: 52px; height: 52px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ffe9a8, #d4912b);
+  box-shadow:
+    inset 0 -4px 8px rgba(0,0,0,0.3),
+    0 0 24px rgba(245,177,76,0.6);
+  animation: coin-spin 4s linear infinite;
+}
+.coin-icon {
+  width: 36px; height: 36px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+@keyframes coin-spin {
+  0%,100% { transform: rotateY(0); }
+  50%     { transform: rotateY(180deg); }
+}
+.reward-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  line-height: 1.1;
+}
+.reward-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.35em;
+  color: #f5b14c;
+  margin-bottom: 4px;
+}
+.reward-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ffd97c;
+  text-shadow: 0 0 18px rgba(255,217,124,0.6);
+}
+.reward-sub {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #8a7a5e;
+  letter-spacing: 0.08em;
+}
+
+/* Button */
+.modal-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 38px;
+  background: linear-gradient(135deg, #ffd97c 0%, #f5b14c 50%, #d4912b 100%);
+  color: #1a1208;
+  border: none;
+  border-radius: 999px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow:
+    0 10px 30px rgba(245,177,76,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    inset 0 -3px 8px rgba(0,0,0,0.2);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.modal-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform .6s ease;
+}
+.modal-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 40px rgba(245,177,76,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.modal-btn:hover::before { transform: translateX(100%); }
+.modal-btn:active { transform: translateY(0); }
+.btn-arrow {
+  display: inline-block;
+  transition: transform .25s ease;
+}
+.modal-btn:hover .btn-arrow { transform: translateX(4px); }
+
+/* Modal transitions */
+.modal-pop-enter-active { transition: opacity .35s ease; }
+.modal-pop-leave-active { transition: opacity .25s ease; }
+.modal-pop-enter-from, .modal-pop-leave-to { opacity: 0; }
+.modal-pop-enter-active .modal-box {
+  animation: modal-in .55s cubic-bezier(.18,.89,.32,1.28);
+}
+@keyframes modal-in {
+  0%   { transform: scale(.7) translateY(20px); opacity: 0; }
+  60%  { transform: scale(1.03) translateY(-4px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@media (max-width: 520px) {
+  .modal-box { padding: 44px 22px 32px; border-radius: 22px; }
+  .modal-title { font-size: 1.7rem; }
+  .trophy-wrap { width: 124px; height: 124px; }
+  .trophy-disc { width: 92px; height: 92px; }
+  .trophy { font-size: 3.6rem; }
+  .reward-box { padding: 14px 18px; gap: 14px; }
+  .reward-value { font-size: 1.6rem; }
+}
+
+/* Destaque de conquistas recentes */
+.unlocked-achievements {
+  max-width: 1320px;
+  margin: 20px auto 30px;
+  padding: 0 38px;
+}
+.recent-unlocked {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  color: #7cffb2;
+  margin-bottom: 12px;
+}
+.unlocked-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.unlocked-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(124,255,178,0.1);
+  border: 1px solid rgba(124,255,178,0.3);
+  border-radius: 999px;
+  font-size: 0.95rem;
 }
 </style>

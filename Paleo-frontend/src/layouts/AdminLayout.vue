@@ -13,11 +13,8 @@
         <router-link to="/admin/periodos">Períodos</router-link>
         <router-link to="/admin/animals">Animais</router-link>
         <router-link to="/admin/products">Produtos</router-link>
-
-        <!-- 🆕 NOVA ABA DE PEDIDOS -->
-        <router-link to="/admin/orders">
-          Pedidos
-        </router-link>
+        <router-link to="/admin/orders">Pedidos</router-link>
+        <router-link to="/admin/comments">Comentários</router-link>
       </nav>
 
       <div class="divider"></div>

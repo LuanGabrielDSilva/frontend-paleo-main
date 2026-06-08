@@ -65,6 +65,7 @@ import AdminUsers from "../views/admin/AdminUsers.vue";
 import AdminPeriodos from "../views/admin/AdminPeriodos.vue";
 import AdminProducts from "../views/admin/AdminProducts.vue";
 import AdminOrders from "../views/admin/AdminOrders.vue";
+import AdminComments from "@/views/admin/AdminComments.vue";
 
 /*
 =========================================================
@@ -301,6 +302,10 @@ const routes = [
         path: "orders",
         component: AdminOrders
       },
+      {
+        path: "/admin/comments",
+        component: AdminComments,
+      }
     ],
   },
 ];
